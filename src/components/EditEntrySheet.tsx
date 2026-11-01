@@ -17,6 +17,18 @@ export function EditEntrySheet({
 }) {
   const [meal, setMeal] = useState<Meal>(entry.meal);
 
+  // Close the sheet straight away, then do the write. The UI never waits on
+  // IndexedDB, and if a write fails you still get told about it.
+  const closeThen = (work: () => Promise<unknown>, done: string) => {
+    onClose();
+    work()
+      .then(() => notify(done))
+      .catch((e) => {
+        console.error(e);
+        notify(`Couldn't update: ${(e as Error)?.message ?? e}`);
+      });
+  };
+
   return (
     <Sheet open onClose={onClose} title="Edit entry">
       <div className="space-y-4">
@@ -25,32 +37,20 @@ export function EditEntrySheet({
         <EntryForm
           initial={entry}
           submitLabel="Save"
-          onSubmit={async (v) => {
-            await db.entries.update(entry.id!, { ...v, meal });
-            notify("Saved");
-            onClose();
-          }}
+          onSubmit={async (v) => closeThen(() => db.entries.update(entry.id!, { ...v, meal }), "Saved")}
           extra={
             <div className="grid grid-cols-2 gap-2">
               <Button
                 type="button"
                 variant="secondary"
-                onClick={async () => {
-                  await relog(entry, entry.date, meal);
-                  notify("Added again");
-                  onClose();
-                }}
+                onClick={() => closeThen(() => relog(entry, entry.date, meal), "Added again")}
               >
                 <Icon name="plus" className="h-4 w-4" /> Log again
               </Button>
               <Button
                 type="button"
                 variant="danger"
-                onClick={async () => {
-                  await db.entries.delete(entry.id!);
-                  notify("Deleted");
-                  onClose();
-                }}
+                onClick={() => closeThen(() => db.entries.delete(entry.id!), "Deleted")}
               >
                 <Icon name="trash" className="h-4 w-4" /> Delete
               </Button>
