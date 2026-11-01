@@ -14,7 +14,6 @@ import { AddFoodSheet } from "./AddFoodSheet";
 import { EditEntrySheet } from "./EditEntrySheet";
 import { Settings } from "./Settings";
 import { InstallHint } from "./InstallHint";
-import { DayReactions } from "./DayReactions";
 import { RefluxView } from "./RefluxView";
 import { TabBar } from "./TabBar";
 import { useFoodIndex } from "@/lib/useFoods";
@@ -120,14 +119,7 @@ export function App() {
                 foods={foods}
               />
             ))}
-            <DayReactions
-              date={date}
-              foods={foods}
-              onOpen={(entryId) => {
-                const e = entries?.find((x) => x.id === entryId);
-                if (e) setEditing(e);
-              }}
-            />
+
             <button
               onClick={() => setView("settings")}
               className="mx-auto flex items-center gap-2 py-4 text-sm text-muted"

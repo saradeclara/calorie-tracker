@@ -22,14 +22,12 @@ export async function lookupBarcode(code: string): Promise<Product | null> {
 export async function estimateFood(input: {
   description: string;
   image?: string; // data URL
-  /** Names of your known reflux triggers, so the AI can reuse them */
-  triggers?: string[];
 }): Promise<AiEstimate> {
   const passcode = await getSetting<string>("passcode", "");
   let res: Response;
   // Never leave the UI spinning: give up a little after the server's own limit.
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 125_000);
+  const timer = setTimeout(() => controller.abort(), 65_000);
   try {
     res = await fetch("/api/estimate", {
       signal: controller.signal,

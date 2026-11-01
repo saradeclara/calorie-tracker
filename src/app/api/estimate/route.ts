@@ -3,9 +3,8 @@ import type { AiEstimate, AiItem } from "@/lib/types";
 
 const MODEL = (process.env.ANTHROPIC_MODEL || "claude-sonnet-5-5").trim();
 
-// Photo estimates, and the first request after the output schema changes (Anthropic
-// compiles it once, then caches it for 24h), can take a while.
-export const maxDuration = 120;
+// Photo estimates can take a while; don't let the platform's default timeout cut them off.
+export const maxDuration = 60;
 
 const SYSTEM = `You are a careful nutrition estimator inside a personal calorie tracking app used in the UK.
 The user describes food they ate (and may attach a photo). Break it into separate items and estimate, for the portion actually eaten:
@@ -17,10 +16,7 @@ Rules:
 - Be realistic rather than optimistic: restaurant and takeaway portions are usually larger and oilier than home-cooked.
 - confidence: "high" for packaged or weighed food, "medium" for clear descriptions, "low" when guessing size or contents.
 - "notes": one or two short sentences on key assumptions or what would improve accuracy. Empty string if nothing to add.
-- If the input isn't food or drink, return an empty items array and explain in notes.
-- "knownTrigger": the user may list foods that give them reflux. If an item is clearly the same food as one on that list
-  (e.g. "oat flat white" vs "Flat white"), use that exact list name as the item's "name" and also put it in "knownTrigger".
-  Only match genuinely the same food, not just a shared ingredient. Otherwise use an empty string.`;
+- If the input isn't food or drink, return an empty items array and explain in notes.`;
 
 const SCHEMA = {
   type: "object",
@@ -32,7 +28,7 @@ const SCHEMA = {
       items: {
         type: "object",
         additionalProperties: false,
-        required: ["name", "portion", "kcal", "protein", "carbs", "fat", "fibre", "confidence", "knownTrigger"],
+        required: ["name", "portion", "kcal", "protein", "carbs", "fat", "fibre", "confidence"],
         properties: {
           name: { type: "string" },
           portion: { type: "string" },
@@ -42,7 +38,6 @@ const SCHEMA = {
           fat: { type: "number" },
           fibre: { type: "number" },
           confidence: { type: "string", enum: ["low", "medium", "high"] },
-          knownTrigger: { type: "string" },
         },
       },
     },
@@ -86,7 +81,7 @@ export async function POST(request: Request) {
     );
   }
 
-  let body: { description?: string; image?: string; triggers?: unknown };
+  let body: { description?: string; image?: string };
   try {
     body = await request.json();
   } catch {
@@ -95,9 +90,6 @@ export async function POST(request: Request) {
 
   const description = (body.description ?? "").trim().slice(0, 2000);
   const image = body.image ? parseDataUrl(body.image) : null;
-  const triggers = Array.isArray(body.triggers)
-    ? body.triggers.filter((t): t is string => typeof t === "string" && t.trim() !== "").map((t) => t.trim().slice(0, 80)).slice(0, 150)
-    : [];
   if (!description && !image) {
     return Response.json({ error: "Describe the food or add a photo." }, { status: 400 });
   }
@@ -109,18 +101,15 @@ export async function POST(request: Request) {
       source: { type: "base64", media_type: image.mediaType, data: image.data },
     });
   }
-  const triggerList = triggers.length
-    ? `\n\nMy known reflux trigger foods:\n${triggers.map((t) => `- ${t}`).join("\n")}`
-    : "\n\nMy known reflux trigger foods: (none)";
   content.push({
     type: "text",
-    text:
-      (description ? `What I ate: ${description}` : "Estimate the food in this photo as one portion eaten by me.") +
-      triggerList,
+    text: description
+      ? `What I ate: ${description}`
+      : "Estimate the food in this photo as one portion eaten by me.",
   });
 
   // Fail with a clear error before the platform kills the function.
-  const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY.trim(), timeout: 105_000, maxRetries: 1 });
+  const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY.trim(), timeout: 50_000, maxRetries: 1 });
   try {
     const message = await client.messages.create({
       model: MODEL,
@@ -145,8 +134,6 @@ export async function POST(request: Request) {
       fat: Math.round(clean(i.fat) * 10) / 10,
       fibre: Math.round(clean(i.fibre) * 10) / 10,
       confidence: ["low", "medium", "high"].includes(i.confidence) ? i.confidence : "medium",
-      // Only accept matches against names we actually sent.
-      knownTrigger: triggers.includes(String(i.knownTrigger ?? "")) ? String(i.knownTrigger) : "",
     }));
 
     return Response.json({ items, notes: String(parsed.notes ?? "") } satisfies AiEstimate);
@@ -181,7 +168,7 @@ function describeError(err: unknown): string {
     }
   }
   if (err instanceof Anthropic.APIConnectionTimeoutError) {
-    return "The AI took too long to respond. Try again — it's usually much faster the second time.";
+    return "The AI took too long to respond. Try again.";
   }
   if (err instanceof SyntaxError) return "The AI replied in an unexpected format. Try again.";
   return `AI estimate failed: ${(err as Error)?.message ?? "unknown error"}`;

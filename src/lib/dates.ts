@@ -42,19 +42,3 @@ export function mealForNow(now = new Date()): Meal {
   if (h >= 17.5 && h < 21.5) return "dinner";
   return "snack";
 }
-
-/** "YYYY-MM-DDTHH:mm" for a datetime-local input: now if the day is today, else that day at the current time. */
-export function defaultReactionTime(dateKey: string): string {
-  const now = new Date();
-  const hhmm = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
-  return `${dateKey === toKey(now) ? toKey(now) : dateKey}T${hhmm}`;
-}
-
-export function formatTime(ms: number): string {
-  return new Date(ms).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
-}
-
-export function formatDateTime(ms: number): string {
-  const d = new Date(ms);
-  return `${formatDay(toKey(d))}, ${formatTime(ms)}`;
-}

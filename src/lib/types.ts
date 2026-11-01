@@ -71,8 +71,6 @@ export interface AiItem extends Nutrients {
   name: string;
   portion: string;
   confidence: "low" | "medium" | "high";
-  /** Exact name of a known reflux trigger this item matches, or "" */
-  knownTrigger: string;
 }
 
 export interface AiEstimate {
@@ -94,17 +92,6 @@ export const SEVERITIES: { id: Severity; label: string }[] = [
 
 export const severityLabel = (s: Severity) => SEVERITIES.find((x) => x.id === s)?.label ?? "";
 
-export const SYMPTOMS = [
-  "Heartburn",
-  "Regurgitation",
-  "Sour taste",
-  "Cough",
-  "Sore throat",
-  "Chest discomfort",
-  "Nausea",
-  "Bloating",
-] as const;
-
 /** One record per distinct food, kept up to date automatically as you log. */
 export interface Food extends Nutrients {
   id?: number;
@@ -120,10 +107,9 @@ export interface Food extends Nutrients {
   lastUsed: number;
   trigger: boolean;
   triggerSeverity?: Severity;
-  triggerNote?: string;
 }
 
-/** A reflux reaction logged against a food. */
+/** Reflux reactions (no longer used by the UI; the table is kept so older data stays valid). */
 export interface Reaction {
   id?: number;
   foodId: number;

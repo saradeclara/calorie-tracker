@@ -68,7 +68,6 @@ export function TriggerWarning({ food, compact }: { food: Food; compact?: boolea
       <Icon name="flame" className="h-3.5 w-3.5 shrink-0 translate-y-px" />
       <span>
         Known reflux trigger ({severityLabel(sev).toLowerCase()})
-        {food.triggerNote && <span className="font-normal opacity-90"> · {food.triggerNote}</span>}
       </span>
     </div>
   );

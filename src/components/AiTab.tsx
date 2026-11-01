@@ -53,10 +53,8 @@ export function AiTab({ date, meal, onAdded }: { date: string; meal: Meal; onAdd
   const fileRef = useRef<HTMLInputElement>(null);
   const { triggers } = useFoodIndex();
 
-  /** The known trigger this AI item matches: the AI's own match, else same name. */
-  const triggerFor = (item: AiItem): Food | undefined =>
-    (item.knownTrigger ? triggers.find((t) => t.name === item.knownTrigger) : undefined) ??
-    triggers.find((t) => norm(t.name) === norm(item.name));
+  /** A flagged food with the same name (matched in the app, no AI involved). */
+  const triggerFor = (item: AiItem): Food | undefined => triggers.find((t) => norm(t.name) === norm(item.name));
 
   const submit = async () => {
     setLoading(true);
@@ -64,11 +62,7 @@ export function AiTab({ date, meal, onAdded }: { date: string; meal: Meal; onAdd
     setError("");
     const slowTimer = window.setTimeout(() => setSlow(true), 12_000);
     try {
-      const res = await estimateFood({
-        description: text,
-        image: image ?? undefined,
-        triggers: [...new Set(triggers.map((t) => t.name))],
-      });
+      const res = await estimateFood({ description: text, image: image ?? undefined });
       setResult(res);
       setPicked(res.items.map(() => ({ on: true, mult: 1 })));
     } catch (e) {
@@ -155,7 +149,7 @@ export function AiTab({ date, meal, onAdded }: { date: string; meal: Meal; onAdd
               try {
                 await logEntries(
                 chosen.map((c) => ({
-                  // A matched trigger is saved under its exact name/brand so it links to that food.
+                  // Same name as a flagged food: save with its brand so it links to that food record.
                   name: c.trigger?.name ?? c.name,
                   brand: c.trigger?.brand,
                   barcode: c.trigger?.barcode,
@@ -244,7 +238,7 @@ export function AiTab({ date, meal, onAdded }: { date: string; meal: Meal; onAdd
       {error && <p className="rounded-xl bg-accent/10 p-3 text-sm text-accent">{error}</p>}
       {loading && slow && (
         <p className="text-center text-xs text-muted">
-          Taking longer than usual. The first estimate after an app update can take up to a minute or two.
+          Taking longer than usual…
         </p>
       )}
 

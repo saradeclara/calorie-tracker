@@ -1,7 +1,6 @@
 import Dexie, { type EntityTable } from "dexie";
 import { DEFAULT_GOALS, Food, FoodEntry, Goals, Reaction, Severity, WaterLog } from "./types";
 import { nameKeyOf } from "./foods";
-import { toKey } from "./dates";
 
 interface Setting {
   key: string;
@@ -159,14 +158,8 @@ export function updateEntry(entry: FoodEntry, changes: Partial<NewEntry>) {
   });
 }
 
-/** Delete an entry. Reactions logged against it are kept on the food. */
 export function deleteEntry(id: number) {
-  return db.transaction("rw", db.entries, db.reactions, async () => {
-    await db.reactions.where("entryId").equals(id).modify((r) => {
-      delete r.entryId;
-    });
-    await db.entries.delete(id);
-  });
+  return db.entries.delete(id);
 }
 
 /** Make sure an entry is linked to a food record (older entries may not be). */
@@ -181,38 +174,11 @@ export async function ensureFoodId(entry: FoodEntry): Promise<number> {
 
 /* ---------- Reflux ---------- */
 
-export function setTrigger(
-  foodId: number,
-  value: { trigger: boolean; severity?: Severity; note?: string },
-) {
+export function setTrigger(foodId: number, value: { trigger: boolean; severity?: Severity }) {
   return db.foods.update(foodId, {
     trigger: value.trigger,
     triggerSeverity: value.trigger ? (value.severity ?? 1) : undefined,
-    triggerNote: value.note?.trim() || undefined,
   });
-}
-
-/** Log a reaction and flag the food as a trigger at its worst reaction's severity. */
-export function logReaction(r: Omit<Reaction, "id" | "date" | "createdAt">) {
-  return db.transaction("rw", db.reactions, db.foods, async () => {
-    await db.reactions.add({
-      ...r,
-      note: r.note?.trim() || undefined,
-      date: toKey(new Date(r.at)),
-      createdAt: Date.now(),
-    });
-    const food = await db.foods.get(r.foodId);
-    if (!food) return;
-    const current = food.trigger ? (food.triggerSeverity ?? 1) : 0;
-    await db.foods.update(r.foodId, {
-      trigger: true,
-      triggerSeverity: Math.max(current, r.severity) as Severity,
-    });
-  });
-}
-
-export function deleteReaction(id: number) {
-  return db.reactions.delete(id);
 }
 
 /* ---------- Water ---------- */
