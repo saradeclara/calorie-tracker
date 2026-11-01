@@ -6,9 +6,16 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "copy-wasm": "node -e \"require('fs').copyFileSync(require.resolve('zxing-wasm/reader/zxing_reader.wasm'),'public/zxing_reader.wasm')\"",
+    "predev": "npm run copy-wasm",
+    "prebuild": "npm run copy-wasm"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^1.3.0",
+    "barcode-detector": "^3.2.3",
+    "dexie": "^4.4.7",
+    "dexie-react-hooks": "^4.4.0",
     "next": "16.4.3",
     "react": "19.3.0",
     "react-dom": "19.3.0"

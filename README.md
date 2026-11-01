@@ -1,36 +1,59 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Calorie Tracker
 
-## Getting Started
+A personal calorie, macro, fibre and water tracker. It's a PWA, so you install it to your phone's home screen from the browser.
 
-First, run the development server:
+- **Barcode scanning**: camera scanning with Open Food Facts lookups. It uses the native `BarcodeDetector` on Android and a self-hosted ZXing WASM decoder on iPhone.
+- **AI estimates**: describe a meal and/or add a photo, and Claude splits it into items with kcal, protein, carbs, fat and fibre. You can tweak portions (0.5×–2×) and untick items before adding.
+- **Manual entry and Recent**: one-tap re-adding of anything you've logged before.
+- **Water**: +250/+500 ml buttons and undo.
+- **Goals**: daily kcal, macros, fibre and water.
+- **Data**: stored on-device in IndexedDB, with JSON export/import for backups.
+- **Offline**: the app shell is cached by a service worker, so logging works without signal. Scanning and AI still need a connection.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+## Stack
+
+Next.js 16 (App Router) · React 19 · TypeScript · Tailwind v4 · Dexie (IndexedDB) · `@anthropic-ai/sdk` · `barcode-detector`
+
+```
+src/app/api/barcode/[code]/route.ts   Open Food Facts proxy (sets a User-Agent, normalises the data)
+src/app/api/estimate/route.ts         Claude call with structured JSON output, passcode-protected
+src/lib/db.ts                         Dexie schema, goals, write helpers, backup
+src/components/                       UI (App → Summary, WaterCard, MealSection, AddFoodSheet tabs…)
+public/sw.js                          Service worker
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Deploy to Vercel
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+1. Push this folder to a GitHub repo and import it in Vercel. Defaults are fine.
+2. Under **Settings → Environment Variables**, add:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+   | Name | Value |
+   | --- | --- |
+   | `ANTHROPIC_API_KEY` | Your key from console.anthropic.com |
+   | `APP_PASSCODE` | Any long random string. Stops strangers who find your URL from spending your API credit |
+   | `ANTHROPIC_MODEL` | *(optional)* defaults to `claude-sonnet-5-5`; `claude-haiku-5-5` is cheaper and faster |
 
-## Learn More
+3. Deploy, then open the URL on your phone:
+   - **iPhone (Safari):** Share → **Add to Home Screen**
+   - **Android (Chrome):** ⋮ menu → **Install app**
+4. In the app, go to **Goals & settings**, enter the same passcode and set your goals.
 
-To learn more about Next.js, take a look at the following resources:
+## Run locally
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+npm install
+cp .env.example .env.local   # fill in your key
+npm run dev
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+The phone camera only works over HTTPS. To test scanning on your phone before deploying, use `next dev --experimental-https`, or a Vercel preview deploy.
 
-## Deploy on Vercel
+## Notes
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- **Your data lives on the phone.** Installing to the home screen protects it from Safari's storage clean-up. Still export a backup now and then.
+- **Barcode data** comes from [Open Food Facts](https://openfoodfacts.org) (ODbL). If a product is missing, the app offers Manual or AI instead. Adding missing products in the Open Food Facts app helps everyone.
+- **AI estimates are estimates.** They're good for "roughly how much was that", less so for precise tracking. Weighed food plus the label is always better.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Ideas for next
+
+Stats and trends charts · reflux diary (symptoms against foods and meal times) · saved meals/recipes · cloud sync (Supabase or DynamoDB) · Apple Health / Google Fit via a native wrapper
