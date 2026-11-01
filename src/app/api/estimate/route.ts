@@ -3,8 +3,9 @@ import type { AiEstimate, AiItem } from "@/lib/types";
 
 const MODEL = (process.env.ANTHROPIC_MODEL || "claude-sonnet-5-5").trim();
 
-// Photo estimates can take a while; don't let the platform's default timeout cut them off.
-export const maxDuration = 60;
+// Photo estimates, and the first request after the output schema changes (Anthropic
+// compiles it once, then caches it for 24h), can take a while.
+export const maxDuration = 120;
 
 const SYSTEM = `You are a careful nutrition estimator inside a personal calorie tracking app used in the UK.
 The user describes food they ate (and may attach a photo). Break it into separate items and estimate, for the portion actually eaten:
@@ -118,7 +119,8 @@ export async function POST(request: Request) {
       triggerList,
   });
 
-  const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY.trim() });
+  // Fail with a clear error before the platform kills the function.
+  const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY.trim(), timeout: 105_000, maxRetries: 1 });
   try {
     const message = await client.messages.create({
       model: MODEL,
@@ -177,6 +179,9 @@ function describeError(err: unknown): string {
         }
         return `AI request failed (${err.status ?? "?"}): ${detail}`;
     }
+  }
+  if (err instanceof Anthropic.APIConnectionTimeoutError) {
+    return "The AI took too long to respond. Try again — it's usually much faster the second time.";
   }
   if (err instanceof SyntaxError) return "The AI replied in an unexpected format. Try again.";
   return `AI estimate failed: ${(err as Error)?.message ?? "unknown error"}`;

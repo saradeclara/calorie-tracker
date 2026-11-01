@@ -27,15 +27,24 @@ export async function estimateFood(input: {
 }): Promise<AiEstimate> {
   const passcode = await getSetting<string>("passcode", "");
   let res: Response;
+  // Never leave the UI spinning: give up a little after the server's own limit.
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 125_000);
   try {
     res = await fetch("/api/estimate", {
+      signal: controller.signal,
     method: "POST",
     headers: { "content-type": "application/json", "x-app-passcode": passcode },
     body: JSON.stringify(input),
     });
-  } catch {
+  } catch (e) {
+    clearTimeout(timer);
+    if ((e as Error)?.name === "AbortError") {
+      throw new Error("The AI took too long to respond. Try again.");
+    }
     throw new Error("Couldn't reach the server. Check your connection.");
   }
+  clearTimeout(timer);
   if (!res.ok) throw new Error(await errorMessage(res));
   return res.json();
 }

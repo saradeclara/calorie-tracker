@@ -44,6 +44,7 @@ export function AiTab({ date, meal, onAdded }: { date: string; meal: Meal; onAdd
   const [text, setText] = useState("");
   const [image, setImage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [slow, setSlow] = useState(false);
   const [error, setError] = useState("");
   const [result, setResult] = useState<AiEstimate | null>(null);
   const [picked, setPicked] = useState<{ on: boolean; mult: number }[]>([]);
@@ -59,7 +60,9 @@ export function AiTab({ date, meal, onAdded }: { date: string; meal: Meal; onAdd
 
   const submit = async () => {
     setLoading(true);
+    setSlow(false);
     setError("");
+    const slowTimer = window.setTimeout(() => setSlow(true), 12_000);
     try {
       const res = await estimateFood({
         description: text,
@@ -71,6 +74,7 @@ export function AiTab({ date, meal, onAdded }: { date: string; meal: Meal; onAdd
     } catch (e) {
       setError((e as Error).message);
     } finally {
+      window.clearTimeout(slowTimer);
       setLoading(false);
     }
   };
@@ -238,6 +242,11 @@ export function AiTab({ date, meal, onAdded }: { date: string; meal: Meal; onAdd
       )}
 
       {error && <p className="rounded-xl bg-accent/10 p-3 text-sm text-accent">{error}</p>}
+      {loading && slow && (
+        <p className="text-center text-xs text-muted">
+          Taking longer than usual. The first estimate after an app update can take up to a minute or two.
+        </p>
+      )}
 
       <Button className="w-full" disabled={loading || (!text.trim() && !image)} onClick={submit}>
         {loading ? (
