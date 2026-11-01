@@ -1,5 +1,5 @@
 import { getSetting } from "./db";
-import type { AiEstimate, Product } from "./types";
+import type { AiEstimate, MealIdea, Product } from "./types";
 
 async function errorMessage(res: Response): Promise<string> {
   const text = await res.text().catch(() => "");
@@ -19,21 +19,19 @@ export async function lookupBarcode(code: string): Promise<Product | null> {
   return res.json();
 }
 
-export async function estimateFood(input: {
-  description: string;
-  image?: string; // data URL
-}): Promise<AiEstimate> {
+/** POST to one of our AI routes with the passcode, and never hang forever. */
+async function postAi<T>(path: string, body: unknown): Promise<T> {
   const passcode = await getSetting<string>("passcode", "");
   let res: Response;
-  // Never leave the UI spinning: give up a little after the server's own limit.
+  // Give up a little after the server's own limit.
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 65_000);
   try {
-    res = await fetch("/api/estimate", {
+    res = await fetch(path, {
       signal: controller.signal,
-    method: "POST",
-    headers: { "content-type": "application/json", "x-app-passcode": passcode },
-    body: JSON.stringify(input),
+      method: "POST",
+      headers: { "content-type": "application/json", "x-app-passcode": passcode },
+      body: JSON.stringify(body),
     });
   } catch (e) {
     clearTimeout(timer);
@@ -45,4 +43,12 @@ export async function estimateFood(input: {
   clearTimeout(timer);
   if (!res.ok) throw new Error(await errorMessage(res));
   return res.json();
+}
+
+export function estimateFood(input: { description: string; image?: string /* data URL */ }) {
+  return postAi<AiEstimate>("/api/estimate", input);
+}
+
+export function suggestMeals(prompt: string) {
+  return postAi<{ ideas: MealIdea[] }>("/api/suggest", { prompt });
 }

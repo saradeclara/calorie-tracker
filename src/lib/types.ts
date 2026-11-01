@@ -124,3 +124,12 @@ export interface Reaction {
   note?: string;
   createdAt: number;
 }
+
+/** An AI meal/snack suggestion. Nutrients are for the whole suggested portion. */
+export interface MealIdea extends Nutrients {
+  name: string;
+  description: string;
+  ingredients: string[];
+  method: string;
+  portion: string;
+}

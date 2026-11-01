@@ -5,6 +5,7 @@ import { MEALS, Meal } from "@/lib/types";
 import { Icon, Segmented, Sheet } from "./ui";
 import { ScanTab } from "./ScanTab";
 import { AiTab } from "./AiTab";
+import { IdeasPanel } from "./IdeasPanel";
 import { EntryForm } from "./EntryForm";
 import { RecentTab } from "./RecentTab";
 import { logEntry } from "@/lib/db";
@@ -36,6 +37,7 @@ export function AddFoodSheet({
   // The sheet only ever renders client-side, so localStorage is safe here.
   const [tab, setTab] = useState<Tab>(readTab);
   const [prefill, setPrefill] = useState<{ barcode?: string; name?: string }>({});
+  const [aiMode, setAiMode] = useState<"estimate" | "ideas">("estimate");
 
   const changeTab = (t: Tab) => {
     setTab(t);
@@ -81,7 +83,24 @@ export function AddFoodSheet({
               onAi={() => changeTab("ai")}
             />
           )}
-          {tab === "ai" && <AiTab date={date} meal={meal} onAdded={done} />}
+          {tab === "ai" && (
+            <div className="space-y-3">
+              <Segmented
+                size="sm"
+                value={aiMode}
+                onChange={setAiMode}
+                options={[
+                  { id: "estimate", label: "What I ate" },
+                  { id: "ideas", label: "Ideas" },
+                ]}
+              />
+              {aiMode === "estimate" ? (
+                <AiTab date={date} meal={meal} onAdded={done} />
+              ) : (
+                <IdeasPanel date={date} meal={meal} onAdded={done} />
+              )}
+            </div>
+          )}
           {tab === "recent" && <RecentTab date={date} meal={meal} onAdded={done} />}
           {tab === "manual" && (
             <EntryForm
