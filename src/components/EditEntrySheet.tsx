@@ -1,10 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { db, relog } from "@/lib/db";
+import { deleteEntry, relog, updateEntry } from "@/lib/db";
 import { FoodEntry, MEALS, Meal } from "@/lib/types";
 import { Button, Icon, Segmented, Sheet } from "./ui";
 import { EntryForm } from "./EntryForm";
+import { RefluxSection } from "./RefluxSection";
 
 export function EditEntrySheet({
   entry,
@@ -30,14 +31,15 @@ export function EditEntrySheet({
   };
 
   return (
-    <Sheet open onClose={onClose} title="Edit entry">
+    <Sheet open onClose={onClose} title={entry.name}>
       <div className="space-y-4">
         <Segmented size="sm" value={meal} onChange={setMeal} options={MEALS.map((m) => ({ id: m.id, label: m.label }))} />
+        <RefluxSection entry={entry} notify={notify} />
         {entry.brand && <p className="text-sm text-muted">{entry.brand}</p>}
         <EntryForm
           initial={entry}
           submitLabel="Save"
-          onSubmit={async (v) => closeThen(() => db.entries.update(entry.id!, { ...v, meal }), "Saved")}
+          onSubmit={async (v) => closeThen(() => updateEntry(entry, { ...v, meal }), "Saved")}
           extra={
             <div className="grid grid-cols-2 gap-2">
               <Button
@@ -50,7 +52,7 @@ export function EditEntrySheet({
               <Button
                 type="button"
                 variant="danger"
-                onClick={() => closeThen(() => db.entries.delete(entry.id!), "Deleted")}
+                onClick={() => closeThen(() => deleteEntry(entry.id!), "Deleted")}
               >
                 <Icon name="trash" className="h-4 w-4" /> Delete
               </Button>

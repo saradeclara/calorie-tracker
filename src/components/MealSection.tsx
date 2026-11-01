@@ -1,4 +1,6 @@
 import { FoodEntry, Meal } from "@/lib/types";
+import type { FoodIndex } from "@/lib/foods";
+import { TriggerDot } from "./Reflux";
 import { round } from "@/lib/nutrition";
 import { Icon } from "./ui";
 
@@ -9,8 +11,10 @@ export function MealSection({
   entries,
   onAdd,
   onEdit,
+  foods,
 }: {
   meal: Meal;
+  foods: FoodIndex;
   label: string;
   entries: FoodEntry[];
   onAdd: () => void;
@@ -44,7 +48,13 @@ export function MealSection({
               >
                 <Icon name={SOURCE_ICON[e.source]} className="h-4 w-4 shrink-0 text-muted" />
                 <div className="min-w-0 flex-1">
-                  <div className="truncate font-medium">{e.name}</div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="truncate font-medium">{e.name}</span>
+                    {(() => {
+                      const f = e.foodId !== undefined ? foods.byId.get(e.foodId) : undefined;
+                      return f?.trigger ? <TriggerDot food={f} /> : null;
+                    })()}
+                  </div>
                   <div className="tabular truncate text-xs text-muted">
                     {[e.brand, e.portion].filter(Boolean).join(" · ")}
                     {(e.brand || e.portion) && " · "}P {round(e.protein, 0)} · C {round(e.carbs, 0)} · F{" "}

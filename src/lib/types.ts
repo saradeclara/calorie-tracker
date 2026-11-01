@@ -20,6 +20,8 @@ export type EntrySource = "barcode" | "ai" | "manual";
 
 export interface FoodEntry extends Nutrients {
   id?: number;
+  /** Link to the food database record (set automatically on save). */
+  foodId?: number;
   /** Local calendar day, YYYY-MM-DD */
   date: string;
   meal: Meal;
@@ -69,6 +71,8 @@ export interface AiItem extends Nutrients {
   name: string;
   portion: string;
   confidence: "low" | "medium" | "high";
+  /** Exact name of a known reflux trigger this item matches, or "" */
+  knownTrigger: string;
 }
 
 export interface AiEstimate {
@@ -77,3 +81,60 @@ export interface AiEstimate {
 }
 
 export const ZERO: Nutrients = { kcal: 0, protein: 0, carbs: 0, fat: 0, fibre: 0 };
+
+/* ---------- Food database & reflux ---------- */
+
+export type Severity = 1 | 2 | 3;
+
+export const SEVERITIES: { id: Severity; label: string }[] = [
+  { id: 1, label: "Mild" },
+  { id: 2, label: "Moderate" },
+  { id: 3, label: "Severe" },
+];
+
+export const severityLabel = (s: Severity) => SEVERITIES.find((x) => x.id === s)?.label ?? "";
+
+export const SYMPTOMS = [
+  "Heartburn",
+  "Regurgitation",
+  "Sour taste",
+  "Cough",
+  "Sore throat",
+  "Chest discomfort",
+  "Nausea",
+  "Bloating",
+] as const;
+
+/** One record per distinct food, kept up to date automatically as you log. */
+export interface Food extends Nutrients {
+  id?: number;
+  /** Normalised name + brand, used to recognise the same food again. */
+  nameKey: string;
+  barcode?: string;
+  name: string;
+  brand?: string;
+  /** Latest portion used */
+  portion?: string;
+  source: EntrySource;
+  useCount: number;
+  lastUsed: number;
+  trigger: boolean;
+  triggerSeverity?: Severity;
+  triggerNote?: string;
+}
+
+/** A reflux reaction logged against a food. */
+export interface Reaction {
+  id?: number;
+  foodId: number;
+  /** The logged entry it was recorded from (cleared if that entry is deleted). */
+  entryId?: number;
+  /** Local day of the reaction, YYYY-MM-DD */
+  date: string;
+  /** When the reaction happened (ms epoch) */
+  at: number;
+  severity: Severity;
+  symptoms: string[];
+  note?: string;
+  createdAt: number;
+}

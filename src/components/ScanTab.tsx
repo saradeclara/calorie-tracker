@@ -8,6 +8,8 @@ import { Meal, Product } from "@/lib/types";
 import { Button, NumberInput, Segmented, Spinner, StickyActions, inputClass } from "./ui";
 import { Scanner } from "./Scanner";
 import { NutrientPreview } from "./NutrientPreview";
+import { TriggerWarning } from "./Reflux";
+import { useFoodIndex } from "@/lib/useFoods";
 
 type State =
   | { kind: "scanning" }
@@ -131,6 +133,8 @@ function ProductPortion({
   const [amount, setAmount] = useState<number | "">(hasServing ? 1 : 100);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState("");
+  const foods = useFoodIndex();
+  const trig = foods.trigger({ name: product.name, brand: product.brand, barcode: product.barcode });
 
   const qty = Number(amount) || 0;
   const grams = unit === "serving" ? qty * (product.servingQuantity ?? 0) : qty;
@@ -155,6 +159,7 @@ function ProductPortion({
             per 100 {u}: {product.per100.kcal} kcal · P {product.per100.protein} · C {product.per100.carbs} · F{" "}
             {product.per100.fat} · Fi {product.per100.fibre}
           </p>
+          {trig && <TriggerWarning food={trig} />}
         </div>
       </div>
 

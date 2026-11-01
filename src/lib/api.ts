@@ -22,6 +22,8 @@ export async function lookupBarcode(code: string): Promise<Product | null> {
 export async function estimateFood(input: {
   description: string;
   image?: string; // data URL
+  /** Names of your known reflux triggers, so the AI can reuse them */
+  triggers?: string[];
 }): Promise<AiEstimate> {
   const passcode = await getSetting<string>("passcode", "");
   let res: Response;

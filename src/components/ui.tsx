@@ -273,6 +273,13 @@ const PATHS: Record<string, ReactNode> = {
   check: <path d="M5 12l5 5 9-10" />,
   download: <path d="M12 4v11M7 10l5 5 5-5M5 20h14" />,
   upload: <path d="M12 20V9M7 14l5-5 5 5M5 4h14" />,
+  flame: <path d="M12 3c.5 3.2 4.5 5.4 4.5 10a4.5 4.5 0 0 1-9 0c0-2 .9-3.4 2-4.5.2 1.6 1 2.6 2 3 0-3.2-.8-5.8.5-8.5z" />,
+  today: (
+    <>
+      <rect x="4" y="5" width="16" height="15" rx="2" />
+      <path d="M8 3v4M16 3v4M4 10h16" />
+    </>
+  ),
   search: (
     <>
       <circle cx="11" cy="11" r="6.5" />
@@ -281,9 +288,18 @@ const PATHS: Record<string, ReactNode> = {
   ),
 };
 
-export function Icon({ name, className }: { name: keyof typeof PATHS | string; className?: string }) {
+export function Icon({
+  name,
+  className,
+  style,
+}: {
+  name: keyof typeof PATHS | string;
+  className?: string;
+  style?: React.CSSProperties;
+}) {
   return (
     <svg
+      style={style}
       viewBox="0 0 24 24"
       className={cx("h-5 w-5", className)}
       fill="none"

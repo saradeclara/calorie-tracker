@@ -14,10 +14,14 @@ import { AddFoodSheet } from "./AddFoodSheet";
 import { EditEntrySheet } from "./EditEntrySheet";
 import { Settings } from "./Settings";
 import { InstallHint } from "./InstallHint";
+import { DayReactions } from "./DayReactions";
+import { RefluxView } from "./RefluxView";
+import { TabBar } from "./TabBar";
+import { useFoodIndex } from "@/lib/useFoods";
 
 export function App() {
   const [date, setDate] = useState<string | null>(null);
-  const [view, setView] = useState<"today" | "settings">("today");
+  const [view, setView] = useState<"today" | "reflux" | "settings">("today");
   const [adding, setAdding] = useState<Meal | null>(null);
   const [editing, setEditing] = useState<FoodEntry | null>(null);
   const [toast, setToast] = useState<string | null>(null);
@@ -51,6 +55,7 @@ export function App() {
     [date],
   );
   const goals = useLiveQuery(() => getGoals(), []) ?? DEFAULT_GOALS;
+  const foods = useFoodIndex();
 
   const notify = useCallback((msg: string) => {
     setToast(msg);
@@ -66,6 +71,8 @@ export function App() {
     <div className="mx-auto min-h-dvh max-w-lg">
       {view === "settings" ? (
         <Settings onBack={() => setView("today")} notify={notify} />
+      ) : view === "reflux" ? (
+        <RefluxView foods={foods} />
       ) : (
         <>
           <header className="pt-safe sticky top-0 z-20 bg-bg/90 px-4 pb-2 backdrop-blur">
@@ -98,7 +105,7 @@ export function App() {
             </div>
           </header>
 
-          <main className="space-y-3 px-4 pb-32">
+          <main className="space-y-3 px-4 pb-44">
             <InstallHint />
             <Summary totals={totals} goals={goals} />
             <WaterCard date={date} totalMl={waterMl} goalMl={goals.waterMl} logs={water ?? []} />
@@ -110,8 +117,17 @@ export function App() {
                 entries={(entries ?? []).filter((e) => e.meal === m.id)}
                 onAdd={() => setAdding(m.id)}
                 onEdit={setEditing}
+                foods={foods}
               />
             ))}
+            <DayReactions
+              date={date}
+              foods={foods}
+              onOpen={(entryId) => {
+                const e = entries?.find((x) => x.id === entryId);
+                if (e) setEditing(e);
+              }}
+            />
             <button
               onClick={() => setView("settings")}
               className="mx-auto flex items-center gap-2 py-4 text-sm text-muted"
@@ -120,16 +136,18 @@ export function App() {
             </button>
           </main>
 
-          <div className="pb-safe pointer-events-none fixed inset-x-0 bottom-0 z-30 flex justify-center">
+          <div className="pointer-events-none fixed inset-x-0 bottom-[calc(4rem+env(safe-area-inset-bottom))] z-30 flex justify-center">
             <button
               onClick={() => setAdding(date === todayKey() ? mealForNow() : "snack")}
-              className="pointer-events-auto mb-2 flex h-14 items-center gap-2 rounded-full bg-ink px-7 font-semibold text-bg shadow-xl shadow-black/20 active:scale-95"
+              className="pointer-events-auto mb-3 flex h-14 items-center gap-2 rounded-full bg-ink px-7 font-semibold text-bg shadow-xl shadow-black/20 active:scale-95"
             >
               <Icon name="plus" /> Add food
             </button>
           </div>
         </>
       )}
+
+      {view !== "settings" && <TabBar value={view} onChange={setView} />}
 
       {adding && (
         <AddFoodSheet

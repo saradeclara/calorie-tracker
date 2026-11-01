@@ -13,6 +13,9 @@
   --fat: #9c5fb5;
   --fibre: #5a9e4b;
   --water: #3a86d1;
+  --mild: #c99a06;
+  --moderate: #e07a1f;
+  --severe: #d1342b;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -29,6 +32,9 @@
     --fat: #b57ccc;
     --fibre: #71b862;
     --water: #5a9fe6;
+    --mild: #e3b52a;
+    --moderate: #f09245;
+    --severe: #f05a50;
   }
 }
 

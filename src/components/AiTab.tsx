@@ -4,7 +4,10 @@ import { useRef, useState } from "react";
 import { estimateFood } from "@/lib/api";
 import { logEntries } from "@/lib/db";
 import { scale, sum } from "@/lib/nutrition";
-import { AiEstimate, Meal } from "@/lib/types";
+import { AiEstimate, AiItem, Food, Meal } from "@/lib/types";
+import { norm } from "@/lib/foods";
+import { useFoodIndex } from "@/lib/useFoods";
+import { TriggerWarning } from "./Reflux";
 import { Button, Icon, Spinner, StickyActions, cx } from "./ui";
 import { NutrientPreview } from "./NutrientPreview";
 
@@ -47,12 +50,22 @@ export function AiTab({ date, meal, onAdded }: { date: string; meal: Meal; onAdd
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
+  const { triggers } = useFoodIndex();
+
+  /** The known trigger this AI item matches: the AI's own match, else same name. */
+  const triggerFor = (item: AiItem): Food | undefined =>
+    (item.knownTrigger ? triggers.find((t) => t.name === item.knownTrigger) : undefined) ??
+    triggers.find((t) => norm(t.name) === norm(item.name));
 
   const submit = async () => {
     setLoading(true);
     setError("");
     try {
-      const res = await estimateFood({ description: text, image: image ?? undefined });
+      const res = await estimateFood({
+        description: text,
+        image: image ?? undefined,
+        triggers: [...new Set(triggers.map((t) => t.name))],
+      });
       setResult(res);
       setPicked(res.items.map(() => ({ on: true, mult: 1 })));
     } catch (e) {
@@ -66,7 +79,7 @@ export function AiTab({ date, meal, onAdded }: { date: string; meal: Meal; onAdd
     const chosen = result.items
       .map((item, i) => ({ item, ...picked[i] }))
       .filter((x) => x.on)
-      .map((x) => ({ ...x.item, ...scale(x.item, x.mult), mult: x.mult }));
+      .map((x) => ({ ...x.item, ...scale(x.item, x.mult), mult: x.mult, trigger: triggerFor(x.item) }));
     const total = sum(chosen);
 
     return (
@@ -78,6 +91,7 @@ export function AiTab({ date, meal, onAdded }: { date: string; meal: Meal; onAdd
           {result.items.map((item, i) => {
             const p = picked[i];
             const v = scale(item, p.mult);
+            const trig = triggerFor(item);
             return (
               <li key={i} className={cx("rounded-2xl bg-card p-4 transition", !p.on && "opacity-45")}>
                 <div className="flex items-start gap-3">
@@ -103,6 +117,7 @@ export function AiTab({ date, meal, onAdded }: { date: string; meal: Meal; onAdd
                     <p className="tabular mt-1 text-xs text-muted">
                       P {v.protein} · C {v.carbs} · F {v.fat} · Fi {v.fibre}
                     </p>
+                    {trig && <TriggerWarning food={trig} />}
                     <div className="mt-2 flex gap-1 overflow-x-auto">
                       {MULTIPLIERS.map((m) => (
                         <button
@@ -136,7 +151,10 @@ export function AiTab({ date, meal, onAdded }: { date: string; meal: Meal; onAdd
               try {
                 await logEntries(
                 chosen.map((c) => ({
-                  name: c.name,
+                  // A matched trigger is saved under its exact name/brand so it links to that food.
+                  name: c.trigger?.name ?? c.name,
+                  brand: c.trigger?.brand,
+                  barcode: c.trigger?.barcode,
                   portion: c.mult === 1 ? c.portion : `${c.mult}× ${c.portion}`,
                   kcal: c.kcal,
                   protein: c.protein,
