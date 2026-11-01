@@ -1,7 +1,10 @@
 import Anthropic from "@anthropic-ai/sdk";
 import type { AiEstimate, AiItem } from "@/lib/types";
 
-const MODEL = process.env.ANTHROPIC_MODEL || "claude-sonnet-5-5";
+const MODEL = (process.env.ANTHROPIC_MODEL || "claude-sonnet-5-5").trim();
+
+// Photo estimates can take a while; don't let the platform's default timeout cut them off.
+export const maxDuration = 60;
 
 const SYSTEM = `You are a careful nutrition estimator inside a personal calorie tracking app used in the UK.
 The user describes food they ate (and may attach a photo). Break it into separate items and estimate, for the portion actually eaten:
@@ -57,14 +60,15 @@ function clean(n: unknown): number {
 
 export async function POST(request: Request) {
   // Protect your API key: in production the app passcode must be configured and sent.
-  const expected = process.env.APP_PASSCODE;
+  // Trim so a stray space/newline pasted into Vercel doesn't break the comparison.
+  const expected = process.env.APP_PASSCODE?.trim();
   if (!expected && process.env.NODE_ENV === "production") {
     return Response.json(
       { error: "Server isn't configured: set APP_PASSCODE in your Vercel environment variables." },
       { status: 500 },
     );
   }
-  if (expected && request.headers.get("x-app-passcode") !== expected) {
+  if (expected && (request.headers.get("x-app-passcode") ?? "").trim() !== expected) {
     return Response.json(
       { error: "Wrong or missing passcode. Add it in Settings." },
       { status: 401 },
@@ -104,7 +108,7 @@ export async function POST(request: Request) {
       : "Estimate the food in this photo as one portion eaten by me.",
   });
 
-  const client = new Anthropic();
+  const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY.trim() });
   try {
     const message = await client.messages.create({
       model: MODEL,
@@ -134,10 +138,34 @@ export async function POST(request: Request) {
     return Response.json({ items, notes: String(parsed.notes ?? "") } satisfies AiEstimate);
   } catch (err) {
     console.error("estimate failed", err);
-    const status = err instanceof Anthropic.APIError && err.status ? err.status : 500;
-    return Response.json(
-      { error: status === 429 ? "AI is busy, try again in a moment." : "AI estimate failed. Try again." },
-      { status: status >= 400 && status < 600 ? status : 500 },
-    );
+    return Response.json({ error: describeError(err) }, { status: 502 });
   }
+}
+
+/** Turn API failures into something you can act on from the phone. */
+function describeError(err: unknown): string {
+  if (err instanceof Anthropic.APIError) {
+    const detail =
+      (err.error as { error?: { message?: string } } | undefined)?.error?.message ?? err.message;
+    switch (err.status) {
+      case 401:
+        return "Anthropic rejected the API key. Check ANTHROPIC_API_KEY in Vercel, then redeploy.";
+      case 403:
+        return `Anthropic refused the request (403): ${detail}`;
+      case 404:
+        return `Model "${MODEL}" wasn't found. Set ANTHROPIC_MODEL in Vercel or remove it. (${detail})`;
+      case 429:
+        return "Rate limited by Anthropic. Wait a moment and try again.";
+      case 529:
+      case 503:
+        return "Anthropic is overloaded right now. Try again shortly.";
+      default:
+        if (/credit|billing|balance/i.test(detail)) {
+          return `Anthropic account issue: ${detail}`;
+        }
+        return `AI request failed (${err.status ?? "?"}): ${detail}`;
+    }
+  }
+  if (err instanceof SyntaxError) return "The AI replied in an unexpected format. Try again.";
+  return `AI estimate failed: ${(err as Error)?.message ?? "unknown error"}`;
 }

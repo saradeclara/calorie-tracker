@@ -2,11 +2,14 @@ import { getSetting } from "./db";
 import type { AiEstimate, Product } from "./types";
 
 async function errorMessage(res: Response): Promise<string> {
+  const text = await res.text().catch(() => "");
   try {
-    const body = await res.json();
-    if (body?.error) return body.error;
+    const body = JSON.parse(text);
+    if (body?.error) return typeof body.error === "string" ? body.error : JSON.stringify(body.error);
   } catch {}
-  return `Request failed (${res.status})`;
+  if (res.status === 504) return "The AI took too long to respond (server timeout). Try again.";
+  if (res.status === 413) return "That photo is too large. Try a smaller one.";
+  return `Request failed (${res.status})${text ? `: ${text.slice(0, 160)}` : ""}`;
 }
 
 export async function lookupBarcode(code: string): Promise<Product | null> {
@@ -21,11 +24,16 @@ export async function estimateFood(input: {
   image?: string; // data URL
 }): Promise<AiEstimate> {
   const passcode = await getSetting<string>("passcode", "");
-  const res = await fetch("/api/estimate", {
+  let res: Response;
+  try {
+    res = await fetch("/api/estimate", {
     method: "POST",
     headers: { "content-type": "application/json", "x-app-passcode": passcode },
     body: JSON.stringify(input),
-  });
+    });
+  } catch {
+    throw new Error("Couldn't reach the server. Check your connection.");
+  }
   if (!res.ok) throw new Error(await errorMessage(res));
   return res.json();
 }
