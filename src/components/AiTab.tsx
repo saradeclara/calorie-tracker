@@ -5,7 +5,7 @@ import { estimateFood } from "@/lib/api";
 import { logEntries } from "@/lib/db";
 import { scale, sum } from "@/lib/nutrition";
 import { AiEstimate, Meal } from "@/lib/types";
-import { Button, Icon, Spinner, cx } from "./ui";
+import { Button, Icon, Spinner, StickyActions, cx } from "./ui";
 import { NutrientPreview } from "./NutrientPreview";
 
 /** Shrink a photo before upload: faster, cheaper, and plenty for food estimates. */
@@ -45,6 +45,7 @@ export function AiTab({ date, meal, onAdded }: { date: string; meal: Meal; onAdd
   const [result, setResult] = useState<AiEstimate | null>(null);
   const [picked, setPicked] = useState<{ on: boolean; mult: number }[]>([]);
   const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
 
   const submit = async () => {
@@ -124,13 +125,16 @@ export function AiTab({ date, meal, onAdded }: { date: string; meal: Meal; onAdd
         </ul>
         {result.notes && <p className="px-1 text-xs leading-relaxed text-muted">{result.notes}</p>}
         <NutrientPreview values={total} />
+        <StickyActions error={saveError}>
         <div className="grid grid-cols-[auto_1fr] gap-2">
           <Button variant="secondary" onClick={() => setResult(null)}>Back</Button>
           <Button
             disabled={chosen.length === 0 || saving}
             onClick={async () => {
               setSaving(true);
-              await logEntries(
+              setSaveError("");
+              try {
+                await logEntries(
                 chosen.map((c) => ({
                   name: c.name,
                   portion: c.mult === 1 ? c.portion : `${c.mult}× ${c.portion}`,
@@ -144,12 +148,18 @@ export function AiTab({ date, meal, onAdded }: { date: string; meal: Meal; onAdd
                   source: "ai" as const,
                 })),
               );
-              onAdded(chosen.length === 1 ? `Added ${chosen[0].name}` : `Added ${chosen.length} items`);
+                onAdded(chosen.length === 1 ? `Added ${chosen[0].name}` : `Added ${chosen.length} items`);
+              } catch (e) {
+                console.error(e);
+                setSaveError(`Couldn't save: ${(e as Error)?.message ?? e}`);
+                setSaving(false);
+              }
             }}
           >
             Add {chosen.length} {chosen.length === 1 ? "item" : "items"} · {total.kcal} kcal
           </Button>
         </div>
+        </StickyActions>
       </div>
     );
   }

@@ -52,9 +52,26 @@ export function Sheet({
             <Icon name="close" />
           </button>
         </div>
-        <div className="flex-1 overflow-y-auto px-5 pb-4">{children}</div>
+        <div className="flex-1 overflow-y-auto overscroll-contain px-5">
+          {children}
+          {/* keeps the end of the content clear of the iPhone home indicator */}
+          {!footer && <div className="pb-safe" aria-hidden />}
+        </div>
         {footer && <div className="pb-safe border-t border-line px-5 pt-3">{footer}</div>}
       </div>
+    </div>
+  );
+}
+
+/**
+ * Action bar that stays pinned to the bottom of a Sheet while its content scrolls,
+ * padded clear of the iPhone home indicator.
+ */
+export function StickyActions({ children, error }: { children: ReactNode; error?: string }) {
+  return (
+    <div className="pb-safe sticky bottom-0 z-10 -mx-5 mt-3 border-t border-line bg-bg px-5 pt-3">
+      {error && <p className="mb-2 rounded-xl bg-accent/10 p-3 text-sm text-accent">{error}</p>}
+      {children}
     </div>
   );
 }

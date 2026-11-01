@@ -5,7 +5,7 @@ import { lookupBarcode } from "@/lib/api";
 import { logEntry } from "@/lib/db";
 import { scale } from "@/lib/nutrition";
 import { Meal, Product } from "@/lib/types";
-import { Button, NumberInput, Segmented, Spinner, inputClass } from "./ui";
+import { Button, NumberInput, Segmented, Spinner, StickyActions, inputClass } from "./ui";
 import { Scanner } from "./Scanner";
 import { NutrientPreview } from "./NutrientPreview";
 
@@ -130,6 +130,7 @@ function ProductPortion({
   const [unit, setUnit] = useState<"serving" | "base">(hasServing ? "serving" : "base");
   const [amount, setAmount] = useState<number | "">(hasServing ? 1 : 100);
   const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState("");
 
   const qty = Number(amount) || 0;
   const grams = unit === "serving" ? qty * (product.servingQuantity ?? 0) : qty;
@@ -183,18 +184,27 @@ function ProductPortion({
 
       <NutrientPreview values={values} />
 
-      <div className="grid grid-cols-[auto_1fr] gap-2">
-        <Button variant="secondary" onClick={onCancel}>Rescan</Button>
-        <Button
-          disabled={qty <= 0 || saving}
-          onClick={async () => {
-            setSaving(true);
-            await onAdd({ ...values, portion });
-          }}
-        >
-          Add {values.kcal} kcal
-        </Button>
-      </div>
+      <StickyActions error={saveError}>
+        <div className="grid grid-cols-[auto_1fr] gap-2">
+          <Button variant="secondary" onClick={onCancel}>Rescan</Button>
+          <Button
+            disabled={qty <= 0 || saving}
+            onClick={async () => {
+              setSaving(true);
+              setSaveError("");
+              try {
+                await onAdd({ ...values, portion });
+              } catch (e) {
+                console.error(e);
+                setSaveError(`Couldn't save: ${(e as Error)?.message ?? e}`);
+                setSaving(false);
+              }
+            }}
+          >
+            Add {values.kcal} kcal
+          </Button>
+        </div>
+      </StickyActions>
     </div>
   );
 }

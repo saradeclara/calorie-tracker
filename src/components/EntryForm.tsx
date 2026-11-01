@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Nutrients } from "@/lib/types";
-import { Button, Field, NumberInput, inputClass } from "./ui";
+import { Button, Field, NumberInput, StickyActions, inputClass } from "./ui";
 
 export interface EntryValues extends Nutrients {
   name: string;
@@ -32,6 +32,7 @@ export function EntryForm({
     fibre: initial.fibre ?? "",
   });
   const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState("");
   const set = <K extends keyof Draft>(k: K, v: Draft[K]) => setD((s) => ({ ...s, [k]: v }));
 
   const valid = d.name.trim() !== "" && d.kcal !== "" && Number(d.kcal) >= 0;
@@ -43,6 +44,7 @@ export function EntryForm({
         e.preventDefault();
         if (!valid) return;
         setSaving(true);
+        setSaveError("");
         try {
           await onSubmit({
             name: d.name.trim(),
@@ -53,6 +55,9 @@ export function EntryForm({
             fat: Number(d.fat) || 0,
             fibre: Number(d.fibre) || 0,
           });
+        } catch (err) {
+          console.error(err);
+          setSaveError(`Couldn't save: ${(err as Error)?.message ?? err}`);
         } finally {
           setSaving(false);
         }
@@ -81,10 +86,12 @@ export function EntryForm({
           <NumberInput value={d.fibre} onChange={(v) => set("fibre", v)} suffix="g" min={0} step="0.1" />
         </Field>
       </div>
-      <Button type="submit" className="w-full" disabled={!valid || saving}>
-        {submitLabel}
-      </Button>
-      {extra}
+      <StickyActions error={saveError}>
+        <Button type="submit" className="w-full" disabled={!valid || saving}>
+          {submitLabel}
+        </Button>
+        {extra && <div className="mt-2">{extra}</div>}
+      </StickyActions>
     </form>
   );
 }
