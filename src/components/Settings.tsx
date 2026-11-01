@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { exportData, getGoals, getSetting, importData, saveGoals, setSetting } from "@/lib/db";
 import { Goals } from "@/lib/types";
 import { Button, Field, Icon, NumberInput, inputClass } from "./ui";
+import { DeficitCalculator } from "./DeficitCalculator";
 
 type GoalDraft = Record<keyof Goals, number | "">;
 
@@ -74,6 +75,18 @@ export function Settings({ onBack, notify }: { onBack: () => void; notify: (m: s
             Save goals
           </Button>
         </section>
+
+        <DeficitCalculator
+          onApply={async (kcal) => {
+            const next = { ...goals, kcal };
+            setGoals(next);
+            const clean = Object.fromEntries(
+              Object.entries(next).map(([k, v]) => [k, Math.max(0, Number(v) || 0)]),
+            ) as unknown as Goals;
+            await saveGoals(clean);
+            notify(`Calorie goal set to ${kcal}`);
+          }}
+        />
 
         <section className="space-y-3 rounded-3xl bg-card p-5 shadow-sm">
           <h2 className="font-semibold">AI passcode</h2>
