@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { getSetting, setSetting } from "@/lib/db";
-import { ACTIVITY, LOSS_RATES, Profile, calculate } from "@/lib/deficit";
+import { ACTIVITY, LOSS_RATES, Profile, calculate, macrosFor } from "@/lib/deficit";
 import { Button, Field, NumberInput, Segmented, cx } from "./ui";
 
 type Draft = Omit<Profile, "age" | "heightCm" | "weightKg"> & {
@@ -13,7 +13,7 @@ type Draft = Omit<Profile, "age" | "heightCm" | "weightKg"> & {
 
 const DEFAULT: Draft = { sex: "female", age: "", heightCm: "", weightKg: "", activity: 1.375, lossKgPerWeek: 0.5 };
 
-export function DeficitCalculator({ onApply }: { onApply: (kcal: number) => void }) {
+export function DeficitCalculator({ onApply }: { onApply: (kcal: number, weightKg: number) => void }) {
   const [d, setD] = useState<Draft | null>(null);
 
   useEffect(() => {
@@ -29,6 +29,7 @@ export function DeficitCalculator({ onApply }: { onApply: (kcal: number) => void
 
   const complete = d.age !== "" && d.heightCm !== "" && d.weightKg !== "" && d.age > 0 && d.heightCm > 0 && d.weightKg > 0;
   const r = complete ? calculate(d as Profile) : null;
+  const m = r ? macrosFor(r.target, Number(d.weightKg)) : null;
 
   return (
     <section className="space-y-3 rounded-3xl bg-card p-5 shadow-sm">
@@ -92,18 +93,24 @@ export function DeficitCalculator({ onApply }: { onApply: (kcal: number) => void
             <Stat label="Maintenance" value={r.maintenance} />
             <Stat label="Target" value={r.target} strong />
           </div>
+          {m && (
+            <p className="tabular text-center text-sm">
+              Protein <b>{m.protein} g</b> · Carbs <b>{m.carbs} g</b> · Fat <b>{m.fat} g</b>
+            </p>
+          )}
           <p className="text-xs text-muted">
             Resting burn (Mifflin-St Jeor) × activity = maintenance
             {r.deficit > 0 && <>, minus {r.deficit} kcal/day for {d.lossKgPerWeek} kg a week (≈7,700 kcal per kg)</>}. It&apos;s
-            an estimate: adjust after a few weeks based on how your weight actually moves.
+            an estimate: adjust after a few weeks based on how your weight actually moves. Macros: protein
+            1.6 g per kg of body weight, fat 30% of calories, carbs the rest.
           </p>
           {r.belowFloor && (
             <p className="rounded-xl bg-accent/10 p-3 text-xs text-accent">
               That&apos;s below {r.floor} kcal/day, the usual minimum without medical supervision. A slower rate is safer.
             </p>
           )}
-          <Button type="button" className="w-full" onClick={() => onApply(r.target)}>
-            Use {r.target} kcal as my daily goal
+          <Button type="button" className="w-full" onClick={() => onApply(r.target, Number(d.weightKg))}>
+            Use {r.target} kcal + these macros as my goals
           </Button>
         </div>
       ) : (

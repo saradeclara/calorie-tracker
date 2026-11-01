@@ -5,6 +5,7 @@ import { exportData, getGoals, getSetting, importData, saveGoals, setSetting } f
 import { Goals } from "@/lib/types";
 import { Button, Field, Icon, NumberInput, inputClass } from "./ui";
 import { DeficitCalculator } from "./DeficitCalculator";
+import { macrosFor } from "@/lib/deficit";
 
 type GoalDraft = Record<keyof Goals, number | "">;
 
@@ -21,11 +22,15 @@ export function Settings({ onBack, notify }: { onBack: () => void; notify: (m: s
   const [goals, setGoals] = useState<GoalDraft | null>(null);
   const [passcode, setPasscode] = useState("");
   const [persisted, setPersisted] = useState<boolean | null>(null);
+  const [weightKg, setWeightKg] = useState<number | undefined>(undefined);
   const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     getGoals().then(setGoals);
     getSetting("passcode", "").then(setPasscode);
+    getSetting<{ weightKg?: number | "" }>("deficitProfile", {}).then((p) =>
+      setWeightKg(typeof p.weightKg === "number" ? p.weightKg : undefined),
+    );
     navigator.storage?.persisted?.().then(setPersisted).catch(() => {});
   }, []);
 
@@ -51,7 +56,14 @@ export function Settings({ onBack, notify }: { onBack: () => void; notify: (m: s
               <Field key={f.key} label={f.label}>
                 <NumberInput
                   value={goals[f.key]}
-                  onChange={(v) => setGoals((g) => g && { ...g, [f.key]: v })}
+                  onChange={(v) =>
+                    setGoals((g) => {
+                      if (!g) return g;
+                      // Changing calories recalculates the macros (you can still tweak them after).
+                      if (f.key === "kcal" && typeof v === "number" && v > 0) return { ...g, kcal: v, ...macrosFor(v, weightKg) };
+                      return { ...g, [f.key]: v };
+                    })
+                  }
                   suffix={f.suffix}
                   min={0}
                 />
@@ -60,7 +72,8 @@ export function Settings({ onBack, notify }: { onBack: () => void; notify: (m: s
           </div>
           <p className="text-xs text-muted">
             Your macro goals add up to about <span className="tabular font-medium text-ink">{Math.round(macroKcal)}</span> kcal
-            (protein & carbs 4 kcal/g, fat 9 kcal/g).
+            (protein & carbs 4 kcal/g, fat 9 kcal/g). Changing calories recalculates protein, carbs and fat; you can still
+            adjust them by hand.
           </p>
           <Button
             className="w-full"
@@ -77,14 +90,15 @@ export function Settings({ onBack, notify }: { onBack: () => void; notify: (m: s
         </section>
 
         <DeficitCalculator
-          onApply={async (kcal) => {
-            const next = { ...goals, kcal };
+          onApply={async (kcal, weight) => {
+            setWeightKg(weight);
+            const next = { ...goals, kcal, ...macrosFor(kcal, weight) };
             setGoals(next);
             const clean = Object.fromEntries(
               Object.entries(next).map(([k, v]) => [k, Math.max(0, Number(v) || 0)]),
             ) as unknown as Goals;
             await saveGoals(clean);
-            notify(`Calorie goal set to ${kcal}`);
+            notify(`Goals set: ${kcal} kcal`);
           }}
         />
 

@@ -38,3 +38,18 @@ export function calculate(p: Profile) {
     floor,
   };
 }
+
+/**
+ * Macro split for a calorie target:
+ * - protein 1.6 g/kg body weight (protects muscle in a deficit), capped at 40% of calories;
+ *   25% of calories if weight is unknown
+ * - fat 30% of calories
+ * - carbs = the rest
+ */
+export function macrosFor(kcal: number, weightKg?: number) {
+  const cap = (kcal * 0.4) / 4;
+  const protein = weightKg && weightKg > 0 ? Math.min(weightKg * 1.6, cap) : (kcal * 0.25) / 4;
+  const fat = (kcal * 0.3) / 9;
+  const carbs = Math.max(0, (kcal - protein * 4 - fat * 9) / 4);
+  return { protein: Math.round(protein), carbs: Math.round(carbs), fat: Math.round(fat) };
+}
