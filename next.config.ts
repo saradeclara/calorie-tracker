@@ -1,6 +1,10 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // Shown in Settings so you can tell which deploy your phone is running.
+  env: {
+    NEXT_PUBLIC_BUILD: `${process.env.VERCEL_GIT_COMMIT_SHA?.slice(0, 7) ?? "local"} · ${new Date().toISOString().slice(0, 16).replace("T", " ")} UTC`,
+  },
   cacheComponents: true,
   partialPrefetching: true,
   turbopack: {

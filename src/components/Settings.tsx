@@ -150,6 +150,7 @@ export function Settings({ onBack, notify }: { onBack: () => void; notify: (m: s
         <p className="px-2 text-center text-xs text-muted">
           Barcode data from Open Food Facts (openfoodfacts.org), licensed ODbL. AI estimates are approximate.
         </p>
+        <p className="tabular px-2 text-center text-xs text-muted">Version {process.env.NEXT_PUBLIC_BUILD}</p>
       </div>
     </div>
   );
