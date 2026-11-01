@@ -1,6 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
 import type { AiEstimate, AiItem } from "@/lib/types";
-import { MODEL, anthropic, describeError, guard } from "@/lib/server/ai";
+import { MODEL, TruncatedReplyError, anthropic, describeError, guard, quickThinking } from "@/lib/server/ai";
 
 // Photo estimates can take a while; don't let the platform's default timeout cut them off.
 export const maxDuration = 60;
@@ -93,7 +93,8 @@ export async function POST(request: Request) {
   try {
     const message = await client.messages.create({
       model: MODEL,
-      max_tokens: 2000,
+      max_tokens: 4096,
+      ...quickThinking(),
       system: SYSTEM,
       messages: [{ role: "user", content }],
       output_config: { format: { type: "json_schema", schema: SCHEMA } },
@@ -103,6 +104,7 @@ export async function POST(request: Request) {
       .filter((b): b is Anthropic.TextBlock => b.type === "text")
       .map((b) => b.text)
       .join("");
+    if (message.stop_reason === "max_tokens") throw new TruncatedReplyError();
     const parsed = JSON.parse(text) as AiEstimate;
 
     const items: AiItem[] = (parsed.items ?? []).map((i) => ({

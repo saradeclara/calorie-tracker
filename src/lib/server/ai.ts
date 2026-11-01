@@ -24,6 +24,18 @@ export function guard(request: Request): Response | null {
   return null;
 }
 
+/**
+ * Sonnet 5.x thinks before answering by default, which is slow and eats into max_tokens.
+ * "between_tools" is its lowest setting: no up-front thinking (only matters with tools).
+ * Other models keep their default.
+ */
+export function quickThinking(): { thinking?: Anthropic.ThinkingConfigParam } {
+  return /^claude-sonnet-5/.test(MODEL) ? { thinking: { type: "between_tools" } } : {};
+}
+
+/** Thrown when the reply hit max_tokens (e.g. cut off mid-JSON). */
+export class TruncatedReplyError extends Error {}
+
 /** Client that fails with a clear error before the platform kills the function. */
 export function anthropic() {
   return new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY!.trim(), timeout: 50_000, maxRetries: 1 });
@@ -56,6 +68,7 @@ export function describeError(err: unknown, model: string): string {
   if (err instanceof Anthropic.APIConnectionTimeoutError) {
     return "The AI took too long to respond. Try again.";
   }
+  if (err instanceof TruncatedReplyError) return "The AI's reply was cut off. Try again, or ask for something simpler.";
   if (err instanceof SyntaxError) return "The AI replied in an unexpected format. Try again.";
   return `AI estimate failed: ${(err as Error)?.message ?? "unknown error"}`;
 }

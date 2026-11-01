@@ -1,6 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
 import type { MealIdea } from "@/lib/types";
-import { MODEL, anthropic, describeError, guard } from "@/lib/server/ai";
+import { MODEL, TruncatedReplyError, anthropic, describeError, guard, quickThinking } from "@/lib/server/ai";
 
 export const maxDuration = 60;
 
@@ -45,7 +45,8 @@ export async function POST(request: Request) {
   try {
     const message = await anthropic().messages.create({
       model: MODEL,
-      max_tokens: 1500,
+      max_tokens: 4096,
+      ...quickThinking(),
       system: SYSTEM,
       messages: [{ role: "user", content: prompt }],
     });
@@ -53,8 +54,15 @@ export async function POST(request: Request) {
       .filter((b): b is Anthropic.TextBlock => b.type === "text")
       .map((b) => b.text)
       .join("");
-    const json = text.slice(text.indexOf("{"), text.lastIndexOf("}") + 1);
-    const parsed = JSON.parse(json) as { ideas?: unknown[] };
+    if (message.stop_reason === "max_tokens") throw new TruncatedReplyError();
+    let parsed: { ideas?: unknown[] };
+    try {
+      // Tolerate code fences or a stray sentence around the JSON.
+      parsed = JSON.parse(text.slice(text.indexOf("{"), text.lastIndexOf("}") + 1));
+    } catch (e) {
+      console.error("suggest: unparseable reply", message.stop_reason, text.slice(0, 2000));
+      throw e;
+    }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const ideas: MealIdea[] = (parsed.ideas ?? []).slice(0, 3).map((raw: any) => ({
