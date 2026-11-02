@@ -1,4 +1,4 @@
-import type { NextRequest } from "next/server";
+import { connection, type NextRequest } from "next/server";
 import { guardPasscode } from "@/lib/server/ai";
 import { GarminError, garminConfigured, garminGet } from "@/lib/server/garmin";
 import type { GarminDay } from "@/lib/types";
@@ -13,9 +13,12 @@ const num = (v: unknown): number | null => {
 const pretty = (key: string) => key.replace(/_/g, " ").replace(/^\w/, (c) => c.toUpperCase());
 
 export async function GET(request: NextRequest) {
+  // Always run at request time: the answer depends on server env, so it must never be prerendered.
+  await connection();
+  // "Not set up" reveals nothing, so answer it before the passcode check (avoids a pointless error).
+  if (!garminConfigured()) return Response.json({ configured: false } satisfies GarminDay);
   const denied = guardPasscode(request);
   if (denied) return denied;
-  if (!garminConfigured()) return Response.json({ configured: false } satisfies GarminDay);
 
   const date = request.nextUrl.searchParams.get("date") ?? "";
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return Response.json({ error: "Bad date." }, { status: 400 });

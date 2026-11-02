@@ -274,6 +274,12 @@ const PATHS: Record<string, ReactNode> = {
   download: <path d="M12 4v11M7 10l5 5 5-5M5 20h14" />,
   upload: <path d="M12 20V9M7 14l5-5 5 5M5 4h14" />,
   flame: <path d="M12 3c.5 3.2 4.5 5.4 4.5 10a4.5 4.5 0 0 1-9 0c0-2 .9-3.4 2-4.5.2 1.6 1 2.6 2 3 0-3.2-.8-5.8.5-8.5z" />,
+  scale: (
+    <>
+      <rect x="3" y="4" width="18" height="16" rx="3" />
+      <path d="M8.5 9.5a5 5 0 0 1 7 0M12 9.5l1.5-2" />
+    </>
+  ),
   activity: <path d="M3 12h4l3-8 4 16 3-8h4" />,
   refresh: <path d="M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7" />,
   today: (

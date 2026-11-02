@@ -1,5 +1,5 @@
 import Dexie, { type EntityTable } from "dexie";
-import { DEFAULT_GOALS, Food, FoodEntry, Goals, Reaction, Severity, WaterLog } from "./types";
+import { DEFAULT_GOALS, Food, FoodEntry, Goals, Reaction, Severity, WaterLog, WeightEntry } from "./types";
 import { nameKeyOf } from "./foods";
 
 interface Setting {
@@ -13,6 +13,7 @@ export const db = new Dexie("calorie-tracker") as Dexie & {
   settings: EntityTable<Setting, "key">;
   foods: EntityTable<Food, "id">;
   reactions: EntityTable<Reaction, "id">;
+  weights: EntityTable<WeightEntry, "date">;
 };
 
 db.version(1).stores({
@@ -34,6 +35,16 @@ db.version(2)
   .upgrade(async (tx) => {
     await backfillFoods(tx.table("entries"), tx.table("foods"));
   });
+
+// v3: weight log
+db.version(3).stores({
+  entries: "++id, date, createdAt, name, foodId",
+  water: "++id, date",
+  settings: "key",
+  foods: "++id, barcode, nameKey, lastUsed",
+  reactions: "++id, foodId, entryId, date, at",
+  weights: "date",
+});
 
 /* ---------- Food database ---------- */
 
@@ -181,6 +192,28 @@ export function setTrigger(foodId: number, value: { trigger: boolean; severity?:
   });
 }
 
+/* ---------- Weight ---------- */
+
+/**
+ * Save a weigh-in (replaces any for that day). If it's your most recent one, the deficit
+ * calculator's weight is updated too, so maintenance/Garmin/protein targets stay current.
+ */
+export async function logWeight(date: string, kg: number) {
+  await db.transaction("rw", db.weights, db.settings, async () => {
+    await db.weights.put({ date, kg, createdAt: Date.now() });
+    const latest = await db.weights.orderBy("date").last();
+    if (latest?.date === date) {
+      const row = await db.settings.get("deficitProfile");
+      const profile = (row?.value as Record<string, unknown>) ?? {};
+      await db.settings.put({ key: "deficitProfile", value: { ...profile, weightKg: kg } });
+    }
+  });
+}
+
+export function deleteWeight(date: string) {
+  return db.weights.delete(date);
+}
+
 /* ---------- Water ---------- */
 
 export function logWater(date: string, ml: number) {
@@ -198,15 +231,17 @@ export interface Backup {
   settings: Setting[];
   foods?: Food[];
   reactions?: Reaction[];
+  weights?: WeightEntry[];
 }
 
 export async function exportData(): Promise<Backup> {
-  const [entries, water, settings, foods, reactions] = await Promise.all([
+  const [entries, water, settings, foods, reactions, weights] = await Promise.all([
     db.entries.toArray(),
     db.water.toArray(),
     db.settings.toArray(),
     db.foods.toArray(),
     db.reactions.toArray(),
+    db.weights.toArray(),
   ]);
   return {
     app: "calorie-tracker",
@@ -216,6 +251,7 @@ export async function exportData(): Promise<Backup> {
     water,
     foods,
     reactions,
+    weights,
     // Never put the passcode in a backup file.
     settings: settings.filter((s) => s.key !== "passcode"),
   };
@@ -225,8 +261,9 @@ export async function importData(backup: Backup) {
   if (backup?.app !== "calorie-tracker" || !Array.isArray(backup.entries)) {
     throw new Error("That doesn't look like a calorie tracker backup.");
   }
-  await db.transaction("rw", [db.entries, db.water, db.settings, db.foods, db.reactions], async () => {
-    await Promise.all([db.entries.clear(), db.water.clear(), db.foods.clear(), db.reactions.clear()]);
+  await db.transaction("rw", [db.entries, db.water, db.settings, db.foods, db.reactions, db.weights], async () => {
+    await Promise.all([db.entries.clear(), db.water.clear(), db.foods.clear(), db.reactions.clear(), db.weights.clear()]);
+    await db.weights.bulkPut(backup.weights ?? []);
     // Ids are kept so entries, foods and reactions stay linked.
     await db.entries.bulkPut(backup.entries);
     await db.water.bulkPut(backup.water ?? []);

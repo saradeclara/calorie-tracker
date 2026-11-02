@@ -19,10 +19,12 @@ import { TabBar } from "./TabBar";
 import { useFoodIndex } from "@/lib/useFoods";
 import { adjustmentFor, useGarminDay, useProfile } from "@/lib/garmin";
 import { GarminCard } from "./GarminCard";
+import { WeightView } from "./WeightView";
+import { WeightInput } from "./WeightInput";
 
 export function App() {
   const [date, setDate] = useState<string | null>(null);
-  const [view, setView] = useState<"today" | "reflux" | "settings">("today");
+  const [view, setView] = useState<"today" | "weight" | "reflux" | "settings">("today");
   const [adding, setAdding] = useState<Meal | null>(null);
   const [editing, setEditing] = useState<FoodEntry | null>(null);
   const [toast, setToast] = useState<string | null>(null);
@@ -77,6 +79,8 @@ export function App() {
         <Settings onBack={() => setView("today")} notify={notify} />
       ) : view === "reflux" ? (
         <RefluxView foods={foods} />
+      ) : view === "weight" ? (
+        <WeightView notify={notify} />
       ) : (
         <>
           <header className="pt-safe sticky top-0 z-20 bg-bg/90 px-4 pb-2 backdrop-blur">
@@ -113,6 +117,9 @@ export function App() {
             <InstallHint />
             <Summary totals={totals} goals={goals} bonus={adj?.adjustment ?? 0} />
             <WaterCard date={date} totalMl={waterMl} goalMl={goals.waterMl} logs={water ?? []} />
+            <section className="rounded-3xl bg-card p-5 shadow-sm">
+              <WeightInput date={date} notify={notify} />
+            </section>
             <GarminCard
               loading={garmin.loading}
               data={garmin.data}

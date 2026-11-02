@@ -134,6 +134,16 @@ export interface MealIdea extends Nutrients {
   portion: string;
 }
 
+/* ---------- Weight ---------- */
+
+/** One weigh-in per day (re-weighing replaces it). */
+export interface WeightEntry {
+  /** Local day, YYYY-MM-DD (primary key) */
+  date: string;
+  kg: number;
+  createdAt: number;
+}
+
 /* ---------- Garmin ---------- */
 
 export interface GarminActivity {

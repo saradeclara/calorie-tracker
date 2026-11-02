@@ -2,10 +2,11 @@
 
 import { Icon, cx } from "./ui";
 
-type Tab = "today" | "reflux";
+type Tab = "today" | "weight" | "reflux";
 
 const TABS: { id: Tab; label: string; icon: string }[] = [
   { id: "today", label: "Today", icon: "today" },
+  { id: "weight", label: "Weight", icon: "scale" },
   { id: "reflux", label: "Reflux", icon: "flame" },
 ];
 

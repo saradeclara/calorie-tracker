@@ -16,6 +16,9 @@
   --mild: #c99a06;
   --moderate: #e07a1f;
   --severe: #d1342b;
+  /* weight chart: validated pair (dataviz validator, light surface) */
+  --w-dot: #2a9d8f;
+  --w-line: #7a4a96;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -35,6 +38,9 @@
     --mild: #e3b52a;
     --moderate: #f09245;
     --severe: #f05a50;
+    /* validated against the dark card surface */
+    --w-dot: #2fa596;
+    --w-line: #a26bbf;
   }
 }
 
