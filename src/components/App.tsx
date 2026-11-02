@@ -84,7 +84,7 @@ export function App() {
       ) : view === "weight" ? (
         <WeightView notify={notify} />
       ) : view === "coach" ? (
-        <CoachView />
+        <CoachView notify={notify} />
       ) : (
         <>
           <header className="pt-safe sticky top-0 z-20 bg-bg/90 px-4 pb-2 backdrop-blur">

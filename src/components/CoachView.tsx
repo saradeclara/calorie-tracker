@@ -2,12 +2,15 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useLiveQuery } from "dexie-react-hooks";
-import { db, setSetting } from "@/lib/db";
-import { askCoach, buildCoachContext, chatMessage, type ChatMessage } from "@/lib/coach";
+import { db, logEntry, setSetting } from "@/lib/db";
+import { askCoach, buildCoachContext, chatMessage, parseReply, type ChatMessage, type Suggestion } from "@/lib/coach";
 import { useGarminDay } from "@/lib/garmin";
-import { todayKey } from "@/lib/dates";
+import { mealForNow, todayKey } from "@/lib/dates";
+import { useFoodIndex } from "@/lib/useFoods";
+import { MEALS } from "@/lib/types";
 import { Icon, Spinner, cx } from "./ui";
 import { Markdownish } from "./Markdownish";
+import { TriggerWarning } from "./Reflux";
 
 const STARTERS = [
   "How am I doing today?",
@@ -18,11 +21,25 @@ const STARTERS = [
 
 const KEY = "coachChat";
 
-export function CoachView() {
+export function CoachView({ notify }: { notify: (m: string) => void }) {
   const [today] = useState(() => todayKey());
   const garmin = useGarminDay(today);
   const saved = useLiveQuery(() => db.settings.get(KEY).then((r) => (r?.value as ChatMessage[]) ?? []), []);
   const [messages, setMessages] = useState<ChatMessage[] | null>(null);
+  const shareReflux = useLiveQuery(() => db.settings.get("coachShareReflux").then((r) => !!r?.value), []);
+  // Which suggestions have been logged this session, keyed "messageAt:index".
+  const [logged, setLogged] = useState<Record<string, boolean>>({});
+
+  const logSuggestion = async (key: string, s: Suggestion) => {
+    const meal = mealForNow();
+    try {
+      await logEntry({ ...s, source: "ai", date: todayKey(), meal });
+      setLogged((l) => ({ ...l, [key]: true }));
+      notify(`Added to ${MEALS.find((m) => m.id === meal)?.label ?? "today"}`);
+    } catch (e) {
+      notify(`Couldn't save: ${(e as Error)?.message ?? e}`);
+    }
+  };
   const [draft, setDraft] = useState("");
   const [streaming, setStreaming] = useState<string | null>(null);
   const [error, setError] = useState("");
@@ -102,7 +119,8 @@ export function CoachView() {
               <p className="font-semibold">Your nutrition & fitness coach</p>
               <p className="mt-1 text-muted">
                 Ask about today&apos;s food, your activity, snack ideas or your weight trend. It sees today&apos;s log, goals,
-                water, Garmin activity and weight, but not your reflux triggers. It&apos;s not medical advice.
+                water, Garmin activity and weight{shareReflux ? ", and your reflux triggers" : ", but not your reflux triggers (you can share them in Goals & settings)"}.
+                Food it suggests can be logged with one tap. It&apos;s not medical advice.
               </p>
             </div>
             <div className="flex flex-col items-start gap-2">
@@ -116,7 +134,14 @@ export function CoachView() {
         )}
 
         {list.map((m, i) => (
-          <Bubble key={`${m.at}-${i}`} role={m.role} text={m.content} />
+          <Bubble
+            key={`${m.at}-${i}`}
+            role={m.role}
+            text={m.content}
+            loggedKeys={logged}
+            keyPrefix={String(m.at)}
+            onLog={logSuggestion}
+          />
         ))}
         {streaming !== null &&
           (streaming ? (
@@ -178,17 +203,67 @@ export function CoachView() {
   );
 }
 
-function Bubble({ role, text }: { role: ChatMessage["role"]; text: string }) {
+function Bubble({
+  role,
+  text,
+  keyPrefix,
+  loggedKeys,
+  onLog,
+}: {
+  role: ChatMessage["role"];
+  text: string;
+  keyPrefix?: string;
+  loggedKeys?: Record<string, boolean>;
+  onLog?: (key: string, s: Suggestion) => void;
+}) {
+  const { display, suggestions } = role === "assistant" ? parseReply(text) : { display: text, suggestions: [] };
   return (
-    <div className={cx("flex", role === "user" ? "justify-end" : "justify-start")}>
+    <div className={cx("flex flex-col", role === "user" ? "items-end" : "items-start")}>
       <div
         className={cx(
           "max-w-[85%] rounded-3xl px-4 py-3 text-[15px] leading-relaxed",
           role === "user" ? "rounded-br-lg bg-ink text-bg" : "rounded-bl-lg bg-card shadow-sm",
         )}
       >
-        {role === "assistant" ? <Markdownish text={text} /> : <p className="whitespace-pre-wrap">{text}</p>}
+        {role === "assistant" ? <Markdownish text={display} /> : <p className="whitespace-pre-wrap">{display}</p>}
       </div>
+      {suggestions.length > 0 && onLog && (
+        <ul className="mt-2 w-full space-y-2" aria-label="Suggestions you can log">
+          {suggestions.map((sg, i) => (
+            <SuggestionCard key={i} s={sg} done={!!loggedKeys?.[`${keyPrefix}:${i}`]} onLog={() => onLog(`${keyPrefix}:${i}`, sg)} />
+          ))}
+        </ul>
+      )}
     </div>
+  );
+}
+
+function SuggestionCard({ s, done, onLog }: { s: Suggestion; done: boolean; onLog: () => void }) {
+  const foods = useFoodIndex();
+  // App-side name match only (no AI): same warning as everywhere else.
+  const trig = foods.triggers.find((t) => t.name.trim().toLowerCase() === s.name.trim().toLowerCase());
+  return (
+    <li className="flex items-center gap-3 rounded-2xl border border-line bg-card px-3 py-2.5">
+      <div className="min-w-0 flex-1">
+        <div className="text-sm font-medium leading-snug">{s.name}</div>
+        <div className="tabular mt-0.5 text-xs text-muted">
+          {s.portion && `${s.portion} · `}
+          {`${s.kcal}\u00a0kcal · P\u00a0${s.protein} · C\u00a0${s.carbs} · F\u00a0${s.fat}`}
+        </div>
+        {trig && <TriggerWarning food={trig} compact />}
+      </div>
+      <button
+        onClick={onLog}
+        disabled={done}
+        className={cx(
+          "flex h-9 shrink-0 items-center gap-1 rounded-full px-3 text-sm font-semibold",
+          done ? "bg-soft text-muted" : "bg-ink text-bg active:scale-95",
+        )}
+        aria-label={done ? `${s.name} logged` : `Log ${s.name}`}
+      >
+        <Icon name={done ? "check" : "plus"} className="h-4 w-4" />
+        {done ? "Logged" : "Log"}
+      </button>
+    </li>
   );
 }

@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useLiveQuery } from "dexie-react-hooks";
 import { db, ensureFoodId, setTrigger } from "@/lib/db";
 import { FoodEntry } from "@/lib/types";
-import { Icon, cx } from "./ui";
+import { Icon, Switch } from "./ui";
 import { SEVERITY_COLOR, SeverityPicker } from "./Reflux";
 
 /** Optional reflux flag + severity for the food behind a logged item. */
@@ -47,24 +47,5 @@ export function RefluxSection({ entry, notify }: { entry: FoodEntry; notify: (m:
         />
       )}
     </section>
-  );
-}
-function Switch({ checked, onChange, label }: { checked: boolean; onChange: (v: boolean) => void; label: string }) {
-  return (
-    <button
-      type="button"
-      role="switch"
-      aria-checked={checked}
-      aria-label={label}
-      onClick={() => onChange(!checked)}
-      className={cx("relative h-8 w-14 shrink-0 rounded-full transition", checked ? "bg-ink" : "bg-soft")}
-    >
-      <span
-        className={cx(
-          "absolute top-1 left-1 h-6 w-6 rounded-full bg-card shadow transition-transform",
-          checked && "translate-x-6",
-        )}
-      />
-    </button>
   );
 }

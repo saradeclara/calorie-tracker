@@ -4,15 +4,15 @@ import { Profile, calculate } from "./deficit";
 import { adjustmentFor } from "./garmin";
 import { sum } from "./nutrition";
 import { withTrend } from "./weight";
-import { MEALS, type GarminBurn, type GarminDay } from "./types";
+import { MEALS, severityLabel, type GarminBurn, type GarminDay, type Nutrients } from "./types";
 
 export type ChatMessage = { role: "user" | "assistant"; content: string; at: number };
 
 const r = (n: number) => Math.round(n);
 
 /**
- * Plain-text snapshot of today for the coach. Deliberately excludes the reflux trigger list
- * (Sara wants no AI involvement in reflux) and anything not needed to answer.
+ * Plain-text snapshot of today for the coach. Reflux triggers are only included when the
+ * "share with coach" setting is on (off by default: no AI in reflux unless Sara opts in).
  */
 export async function buildCoachContext(garmin?: GarminDay | null): Promise<string> {
   const date = todayKey();
@@ -82,7 +82,58 @@ export async function buildCoachContext(garmin?: GarminDay | null): Promise<stri
     );
   }
 
+  if (await getSetting<boolean>("coachShareReflux", false)) {
+    const triggers = (await db.foods.toArray()).filter((f) => f.trigger);
+    lines.push(
+      triggers.length
+        ? `My reflux triggers (avoid suggesting these): ${triggers.map((f) => `${f.name}${f.brand ? ` (${f.brand})` : ""}, ${severityLabel(f.triggerSeverity ?? 1).toLowerCase()}`).join("; ")}.`
+        : "My reflux triggers: none flagged yet.",
+    );
+  }
+
   return lines.join("\n");
+}
+
+/* ---------- Loggable suggestions in replies ---------- */
+
+export interface Suggestion extends Nutrients {
+  name: string;
+  portion?: string;
+}
+
+const num = (v: unknown, dp = 1) => {
+  const n = Number(v);
+  return Number.isFinite(n) && n >= 0 ? Math.round(n * 10 ** dp) / 10 ** dp : 0;
+};
+
+/**
+ * Split a coach reply into the text to show and its <log> suggestions. Works on partial
+ * (streaming) text too: anything from "<log" onwards is hidden until it's complete.
+ */
+export function parseReply(text: string): { display: string; suggestions: Suggestion[] } {
+  const start = text.search(/<log\b|<lo?$|<$/);
+  if (start === -1) return { display: text, suggestions: [] };
+  const display = text.slice(0, start).trimEnd();
+  const m = /<log>([\s\S]*?)<\/log>/.exec(text.slice(start));
+  if (!m) return { display, suggestions: [] };
+  try {
+    const raw = JSON.parse(m[1].trim());
+    const suggestions = (Array.isArray(raw) ? raw : [])
+      .slice(0, 4)
+      .filter((x) => x && typeof x.name === "string" && x.name.trim())
+      .map((x) => ({
+        name: String(x.name).trim().slice(0, 100),
+        portion: typeof x.portion === "string" && x.portion.trim() ? x.portion.trim().slice(0, 100) : undefined,
+        kcal: num(x.kcal, 0),
+        protein: num(x.protein),
+        carbs: num(x.carbs),
+        fat: num(x.fat),
+        fibre: num(x.fibre),
+      }));
+    return { display, suggestions };
+  } catch {
+    return { display, suggestions: [] };
+  }
 }
 
 /** Stream a coach reply. Calls onText with the growing reply. */

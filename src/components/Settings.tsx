@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { exportData, getGoals, getSetting, importData, saveGoals, setSetting } from "@/lib/db";
 import { Goals } from "@/lib/types";
-import { Button, Field, Icon, NumberInput, inputClass } from "./ui";
+import { Button, Field, Icon, NumberInput, Switch, inputClass } from "./ui";
 import { DeficitCalculator } from "./DeficitCalculator";
 import { macrosFor } from "@/lib/deficit";
 
@@ -23,11 +23,13 @@ export function Settings({ onBack, notify }: { onBack: () => void; notify: (m: s
   const [passcode, setPasscode] = useState("");
   const [persisted, setPersisted] = useState<boolean | null>(null);
   const [weightKg, setWeightKg] = useState<number | undefined>(undefined);
+  const [shareReflux, setShareReflux] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     getGoals().then(setGoals);
     getSetting("passcode", "").then(setPasscode);
+    getSetting("coachShareReflux", false).then(setShareReflux);
     getSetting<{ weightKg?: number | "" }>("deficitProfile", {}).then((p) =>
       setWeightKg(typeof p.weightKg === "number" ? p.weightKg : undefined),
     );
@@ -101,6 +103,24 @@ export function Settings({ onBack, notify }: { onBack: () => void; notify: (m: s
             notify(`Goals set: ${kcal} kcal`);
           }}
         />
+
+        <section className="space-y-2 rounded-3xl bg-card p-5 shadow-sm">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <h2 className="font-semibold">Share reflux triggers with the coach</h2>
+              <p className="text-xs text-muted">So its suggestions avoid them. Off by default; nothing else about reflux uses AI.</p>
+            </div>
+            <Switch
+              checked={shareReflux}
+              label="Share reflux triggers with the coach"
+              onChange={async (on) => {
+                setShareReflux(on);
+                await setSetting("coachShareReflux", on);
+                notify(on ? "Coach will see your triggers" : "Coach won't see your triggers");
+              }}
+            />
+          </div>
+        </section>
 
         <section className="space-y-3 rounded-3xl bg-card p-5 shadow-sm">
           <h2 className="font-semibold">AI passcode</h2>
