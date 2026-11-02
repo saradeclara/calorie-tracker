@@ -53,6 +53,9 @@ export function describeError(err: unknown, model: string): string {
   if (err instanceof Anthropic.APIError) {
     const detail =
       (err.error as { error?: { message?: string } } | undefined)?.error?.message ?? err.message;
+    // Errors that arrive mid-stream carry no HTTP status, only the message.
+    if (/overloaded/i.test(detail)) return "Anthropic is overloaded right now. Try again shortly.";
+    if (/rate.?limit/i.test(detail)) return "Rate limited by Anthropic. Wait a moment and try again.";
     switch (err.status) {
       case 401:
         return "Anthropic rejected the API key. Check ANTHROPIC_API_KEY in Vercel, then redeploy.";

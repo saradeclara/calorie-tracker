@@ -280,6 +280,8 @@ const PATHS: Record<string, ReactNode> = {
       <path d="M8.5 9.5a5 5 0 0 1 7 0M12 9.5l1.5-2" />
     </>
   ),
+  chat: <path d="M4 5h16v11H9l-5 4V5z" />,
+  send: <path d="M4 12l16-8-6 16-3-7-7-1z" />,
   activity: <path d="M3 12h4l3-8 4 16 3-8h4" />,
   refresh: <path d="M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7" />,
   today: (

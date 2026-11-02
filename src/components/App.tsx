@@ -20,11 +20,12 @@ import { useFoodIndex } from "@/lib/useFoods";
 import { adjustmentFor, useGarminBurn, useGarminDay, useProfile } from "@/lib/garmin";
 import { GarminCard } from "./GarminCard";
 import { WeightView } from "./WeightView";
+import { CoachView } from "./CoachView";
 import { WeightInput } from "./WeightInput";
 
 export function App() {
   const [date, setDate] = useState<string | null>(null);
-  const [view, setView] = useState<"today" | "weight" | "reflux" | "settings">("today");
+  const [view, setView] = useState<"today" | "weight" | "coach" | "reflux" | "settings">("today");
   const [adding, setAdding] = useState<Meal | null>(null);
   const [editing, setEditing] = useState<FoodEntry | null>(null);
   const [toast, setToast] = useState<string | null>(null);
@@ -82,6 +83,8 @@ export function App() {
         <RefluxView foods={foods} />
       ) : view === "weight" ? (
         <WeightView notify={notify} />
+      ) : view === "coach" ? (
+        <CoachView />
       ) : (
         <>
           <header className="pt-safe sticky top-0 z-20 bg-bg/90 px-4 pb-2 backdrop-blur">
