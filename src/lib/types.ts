@@ -150,5 +150,7 @@ export interface GarminDay {
   /** Garmin's active calories for the day so far (all movement, incl. workouts) */
   activeKcal?: number | null;
   totalKcal?: number | null;
+  steps?: number | null;
+  stepGoal?: number | null;
   activities?: GarminActivity[];
 }

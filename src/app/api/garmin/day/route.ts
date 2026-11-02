@@ -47,6 +47,8 @@ export async function GET(request: NextRequest) {
       configured: true,
       activeKcal: num(stats?.activeKilocalories),
       totalKcal: num(stats?.totalKilocalories),
+      steps: num(stats?.totalSteps),
+      stepGoal: num(stats?.dailyStepGoal),
       activities,
     };
     return Response.json(body, { headers: { "Cache-Control": "no-store" } });

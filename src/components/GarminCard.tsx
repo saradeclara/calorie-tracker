@@ -2,7 +2,7 @@
 
 import type { Adjustment } from "@/lib/garmin";
 import type { GarminDay } from "@/lib/types";
-import { Icon, Spinner } from "./ui";
+import { Bar, Icon, Spinner } from "./ui";
 
 export function GarminCard({
   loading,
@@ -38,6 +38,19 @@ export function GarminCard({
 
       {data?.configured && (
         <>
+          {data.steps != null && (
+            <div className="mb-3">
+              <div className="mb-1 flex items-baseline justify-between text-sm">
+                <span className="font-medium">Steps</span>
+                <span className="tabular text-muted">
+                  <span className="font-semibold text-ink">{data.steps.toLocaleString("en-GB")}</span>
+                  {data.stepGoal ? ` / ${data.stepGoal.toLocaleString("en-GB")}` : ""}
+                </span>
+              </div>
+              {data.stepGoal ? <Bar value={data.steps} max={data.stepGoal} color="var(--protein)" /> : null}
+            </div>
+          )}
+
           {(data.activities?.length ?? 0) > 0 ? (
             <ul className="mb-3 space-y-1.5">
               {data.activities!.map((a) => (
