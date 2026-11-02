@@ -1,7 +1,6 @@
 "use client";
 
-import { Component, ReactNode, useEffect } from "react";
-import { recordError } from "@/lib/errors";
+import { Component, ReactNode } from "react";
 
 /** Shows a recoverable screen (with the actual error) instead of a blank app. */
 export class ErrorBoundary extends Component<{ children: ReactNode }, { error: Error | null }> {
@@ -12,7 +11,7 @@ export class ErrorBoundary extends Component<{ children: ReactNode }, { error: E
   }
 
   componentDidCatch(error: Error) {
-    recordError(error, "render");
+    console.error(error);
   }
 
   render() {
@@ -28,19 +27,4 @@ export class ErrorBoundary extends Component<{ children: ReactNode }, { error: E
       </div>
     );
   }
-}
-
-/** Records errors that don't go through React rendering (event handlers, promises). */
-export function GlobalErrorCapture() {
-  useEffect(() => {
-    const onError = (e: ErrorEvent) => recordError(e.error ?? e.message, "window.onerror");
-    const onRejection = (e: PromiseRejectionEvent) => recordError(e.reason, "unhandled promise");
-    window.addEventListener("error", onError);
-    window.addEventListener("unhandledrejection", onRejection);
-    return () => {
-      window.removeEventListener("error", onError);
-      window.removeEventListener("unhandledrejection", onRejection);
-    };
-  }, []);
-  return null;
 }

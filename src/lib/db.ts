@@ -85,8 +85,8 @@ async function upsertFood(foods: FoodsTable, item: FoodFields, at: number, used:
   if (existing?.id !== undefined) {
     await foods.update(existing.id, {
       ...latest,
-      // A saved kit recipe keeps its card numbers when logged as "1 serving".
-      ...(existing.kind === "recipe" && item.portion === "1 serving"
+      // A saved meal keeps its pack/card numbers when logged at its saved portion.
+      ...(existing.kind === "recipe" && item.portion === existing.portion
         ? { kcal: existing.kcal, protein: existing.protein, carbs: existing.carbs, fat: existing.fat, fibre: existing.fibre }
         : {}),
       barcode: existing.barcode ?? item.barcode,
@@ -189,15 +189,29 @@ export async function ensureFoodId(entry: FoodEntry): Promise<number> {
 
 /* ---------- Meal-kit recipes ---------- */
 
-/** Save (or update) a meal-kit recipe in the food database. Returns its id. */
-export function saveRecipe(r: { name: string; provider?: string; kcal: number; protein: number; carbs: number; fat: number; fibre: number }) {
+/**
+ * Save (or update) a "saved meal" (meal kit, ready meal, packaged food) with a fixed portion and
+ * the exact numbers from its pack/card. Returns its id.
+ */
+export function saveRecipe(r: {
+  name: string;
+  provider?: string;
+  portion?: string;
+  barcode?: string;
+  kcal: number;
+  protein: number;
+  carbs: number;
+  fat: number;
+  fibre: number;
+}) {
   return db.transaction("rw", db.foods, async () => {
     const brand = r.provider?.trim() || undefined;
     const fields = {
       name: r.name.trim(),
       brand,
       nameKey: nameKeyOf(r.name, brand),
-      portion: "1 serving",
+      portion: r.portion?.trim() || "1 serving",
+      barcode: r.barcode,
       source: "manual" as const,
       kcal: r.kcal,
       protein: r.protein,

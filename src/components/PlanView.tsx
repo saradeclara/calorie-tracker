@@ -7,7 +7,7 @@ import { requestPlan } from "@/lib/api";
 import { addDays, todayKey } from "@/lib/dates";
 import { calorieWindow, type PlanTargets } from "@/lib/plan";
 import { PLAN_KEY, dayLabel, logPlan, planTargets, planTurn, savePlan, sharedTriggers, tickedKits, type StoredPlan } from "@/lib/planner";
-import { KitPicker } from "./KitPicker";
+import { PlanMeals } from "./PlanMeals";
 import { useFoodIndex } from "@/lib/useFoods";
 import { MEALS } from "@/lib/types";
 import { Bar, Button, Icon, Segmented, Spinner, cx } from "./ui";
@@ -128,7 +128,7 @@ export function PlanView({ notify }: { notify: (m: string) => void }) {
               </button>
             )}
           </section>
-          <KitPicker notify={notify} />
+          <PlanMeals notify={notify} />
         </div>
       </div>
     );
@@ -203,7 +203,7 @@ export function PlanView({ notify }: { notify: (m: string) => void }) {
                         <span>
                           {i.kitId !== undefined && (
                             <span className="mr-1.5 rounded-full bg-soft px-1.5 py-0.5 align-middle text-[10px] font-semibold uppercase tracking-wide text-muted">
-                              {i.brand || "Kit"}
+                              {i.brand || "Saved"}
                             </span>
                           )}
                           {i.name}
@@ -240,7 +240,7 @@ export function PlanView({ notify }: { notify: (m: string) => void }) {
           {stored.loggedAt ? "Logged · log again" : `Log whole plan to ${dayLabel(stored.date).split(" ")[0]}`}
         </Button>
 
-        <KitPicker notify={notify} />
+        <PlanMeals notify={notify} />
 
         {/* Refine chat */}
         <section className="space-y-2 pt-2">

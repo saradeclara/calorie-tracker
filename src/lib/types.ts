@@ -107,7 +107,10 @@ export interface Food extends Nutrients {
   lastUsed: number;
   trigger: boolean;
   triggerSeverity?: Severity;
-  /** "recipe" = a saved meal-kit recipe (per serving, numbers from the card) */
+  /**
+   * "recipe" = a saved meal (kit, ready meal, packaged food) with a fixed portion and the
+   * exact numbers from its pack/card. These can be ticked into meal plans.
+   */
   kind?: "recipe";
 }
 
@@ -178,16 +181,15 @@ export interface GarminBurn {
   avgActive?: number | null;
 }
 
-/** What the recipe-card reader found (per serving). null = not printed. */
-export interface RecipeCard {
+/** What the nutrition-label reader found. null = not printed. */
+export interface LabelRead {
   found: boolean;
   name: string;
-  provider: string;
-  kcal: number | null;
-  protein: number | null;
-  carbs: number | null;
-  fat: number | null;
-  fibre: number | null;
-  servingNote: string;
+  brand: string;
+  unit: "g" | "ml";
+  per100: { [K in keyof Nutrients]: number | null } | null;
+  perServing: { [K in keyof Nutrients]: number | null } | null;
+  servingSize: string;
+  servingGrams: number | null;
   notes: string;
 }

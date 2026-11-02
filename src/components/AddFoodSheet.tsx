@@ -6,7 +6,6 @@ import { Icon, Segmented, Sheet } from "./ui";
 import { ScanTab } from "./ScanTab";
 import { AiTab } from "./AiTab";
 import { IdeasPanel } from "./IdeasPanel";
-import { RecipeCardFlow } from "./RecipeCardFlow";
 import { EntryForm } from "./EntryForm";
 import { RecentTab } from "./RecentTab";
 import { logEntry } from "@/lib/db";
@@ -38,7 +37,7 @@ export function AddFoodSheet({
   // The sheet only ever renders client-side, so localStorage is safe here.
   const [tab, setTab] = useState<Tab>(readTab);
   const [prefill, setPrefill] = useState<{ barcode?: string; name?: string }>({});
-  const [aiMode, setAiMode] = useState<"estimate" | "ideas" | "kit">("estimate");
+  const [aiMode, setAiMode] = useState<"estimate" | "ideas">("estimate");
 
   const changeTab = (t: Tab) => {
     setTab(t);
@@ -93,15 +92,12 @@ export function AddFoodSheet({
                 options={[
                   { id: "estimate", label: "What I ate" },
                   { id: "ideas", label: "Ideas" },
-                  { id: "kit", label: "Kit card" },
                 ]}
               />
               {aiMode === "estimate" ? (
                 <AiTab date={date} meal={meal} onAdded={done} />
-              ) : aiMode === "ideas" ? (
-                <IdeasPanel date={date} meal={meal} onAdded={done} />
               ) : (
-                <RecipeCardFlow key={meal} logTo={{ date, meal }} onDone={done} />
+                <IdeasPanel date={date} meal={meal} onAdded={done} />
               )}
             </div>
           )}

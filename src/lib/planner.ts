@@ -85,7 +85,13 @@ export async function tickedKits(): Promise<PlanKit[]> {
   const foods = await db.foods.bulkGet(ids);
   return foods
     .filter((f): f is NonNullable<typeof f> => !!f && f.kind === "recipe")
-    .map((f) => ({ id: f.id!, name: f.name, brand: f.brand, kcal: f.kcal, protein: f.protein, carbs: f.carbs, fat: f.fat, fibre: f.fibre }));
+    .map((f) => ({ id: f.id!, name: f.name, brand: f.brand, portion: f.portion, kcal: f.kcal, protein: f.protein, carbs: f.carbs, fat: f.fat, fibre: f.fibre }));
+}
+
+/** Tick a saved meal for planning (no-op if already ticked). */
+export async function tickKit(id: number) {
+  const ids = await getSetting<number[]>(PLAN_KITS_KEY, []);
+  if (!ids.includes(id)) await setTickedKits([...ids, id]);
 }
 
 export function setTickedKits(ids: number[]) {

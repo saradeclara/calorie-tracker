@@ -101,6 +101,6 @@ export function requestPlan(body: {
   return postAi<PlanResponse>("/api/plan", body);
 }
 
-export function readRecipeCard(image: string) {
-  return postAi<import("./types").RecipeCard>("/api/recipe-card", { image });
+export function readLabel(image: string) {
+  return postAi<import("./types").LabelRead>("/api/label", { image });
 }

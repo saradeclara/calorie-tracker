@@ -37,9 +37,9 @@ The day: ${dayLabel}.
       : ""
   }${
     kits.length
-      ? `\n\nMeal kits they have (Gousto/HelloFresh-style recipes with exact per-serving nutrition from the card). Include EACH of these exactly once, as a whole main meal (usually dinner or lunch), as a single item with its "kitId", name as given and portion "1 serving". Use these exact numbers; plan everything else around them:\n${kits
-          .map((k) => `- kitId ${k.id}: ${k.brand ? `${k.brand} · ` : ""}${k.name}: ${k.kcal} kcal, protein ${k.protein} g, carbs ${k.carbs} g, fat ${k.fat} g, fibre ${k.fibre} g`)
-          .join("\n")}\nIf they ask for a meal to be a kit, use the kit item; add sides only if they fit.`
+      ? `\n\nSaved meals they want included (meal kits, ready meals or packaged food, with exact nutrition from the pack/card for the portion shown). Include EACH exactly once, as a single item with its "kitId", the name and portion as given, in the most sensible meal slot (main meals at lunch/dinner, snacks as snacks). These numbers are fixed; plan everything else around them:\n${kits
+          .map((k) => `- kitId ${k.id}: ${k.brand ? `${k.brand} · ` : ""}${k.name} (${k.portion || "1 serving"}): ${k.kcal} kcal, protein ${k.protein} g, carbs ${k.carbs} g, fat ${k.fat} g, fibre ${k.fibre} g`)
+          .join("\n")}\nAdd sides around a saved meal only if they fit.`
       : ""
   }
 
@@ -81,11 +81,11 @@ export async function POST(request: Request) {
   const kits: PlanKit[] = (Array.isArray(body.kits) ? body.kits : [])
     .filter((k) => Number.isInteger(k?.id) && typeof k.name === "string" && Number(k.kcal) > 0)
     .slice(0, 4)
-    .map((k) => ({ id: k.id, name: k.name.slice(0, 120), brand: k.brand?.slice(0, 40), kcal: +k.kcal, protein: +k.protein || 0, carbs: +k.carbs || 0, fat: +k.fat || 0, fibre: +k.fibre || 0 }));
+    .map((k) => ({ id: k.id, name: k.name.slice(0, 120), brand: k.brand?.slice(0, 40), portion: k.portion?.slice(0, 80), kcal: +k.kcal, protein: +k.protein || 0, carbs: +k.carbs || 0, fat: +k.fat || 0, fibre: +k.fibre || 0 }));
   const kitKcal = kits.reduce((a, k) => a + k.kcal, 0);
   if (kitKcal > calorieWindow(t).max) {
     return Response.json(
-      { error: `Your ticked kits add up to ${Math.round(kitKcal)} kcal, more than your ${calorieWindow(t).max} kcal goal on their own. Untick one.` },
+      { error: `Your ticked meals add up to ${Math.round(kitKcal)} kcal, more than your ${calorieWindow(t).max} kcal goal on their own. Untick one.` },
       { status: 400 },
     );
   }
@@ -124,8 +124,8 @@ export async function POST(request: Request) {
       if (check.within && !kitted.missing.length) return Response.json({ ...parsed, check, attempts: attempt + 1 });
       lastGood = parsed;
       const problems = [
-        kitted.missing.length ? `These meal kits are missing and must each be included once, as an item with its kitId: ${kitted.missing.join("; ")}.` : "",
-        check.within ? "" : `${check.problem} (Kit items count at their card values, which can't change.)`,
+        kitted.missing.length ? `These saved meals are missing and must each be included once, as an item with its kitId: ${kitted.missing.join("; ")}.` : "",
+        check.within ? "" : `${check.problem} (Saved meals count at their pack/card values, which can't change.)`,
       ].filter(Boolean);
       messages.push(
         { role: "assistant", content: text },

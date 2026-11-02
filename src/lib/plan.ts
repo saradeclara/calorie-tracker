@@ -13,6 +13,8 @@ export interface PlanKit extends Nutrients {
   id: number;
   name: string;
   brand?: string;
+  /** The saved portion the numbers are for, e.g. "1 serving" or "1 × pack (400 g)" */
+  portion?: string;
 }
 
 export interface PlanMeal {
@@ -112,7 +114,7 @@ export function applyKits(plan: MealPlan, kits: PlanKit[]): { plan: MealPlan; mi
       const k = i.kitId !== undefined ? byId.get(i.kitId) : undefined;
       if (!k) return { ...i, kitId: undefined };
       used.add(k.id);
-      return { ...i, kitId: k.id, name: k.name, brand: k.brand, portion: "1 serving", kcal: k.kcal, protein: k.protein, carbs: k.carbs, fat: k.fat, fibre: k.fibre };
+      return { ...i, kitId: k.id, name: k.name, brand: k.brand, portion: k.portion || "1 serving", kcal: k.kcal, protein: k.protein, carbs: k.carbs, fat: k.fat, fibre: k.fibre };
     }),
   }));
   return { plan: { ...plan, meals }, missing: kits.filter((k) => !used.has(k.id)).map((k) => k.name) };
