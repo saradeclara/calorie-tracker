@@ -107,16 +107,16 @@ export function Settings({ onBack, notify }: { onBack: () => void; notify: (m: s
         <section className="space-y-2 rounded-3xl bg-card p-5 shadow-sm">
           <div className="flex items-center justify-between gap-3">
             <div>
-              <h2 className="font-semibold">Share reflux triggers with the coach</h2>
-              <p className="text-xs text-muted">So its suggestions avoid them. Off by default; nothing else about reflux uses AI.</p>
+              <h2 className="font-semibold">Share reflux triggers with AI</h2>
+              <p className="text-xs text-muted">So the coach and meal planner avoid them. Off by default; nothing else about reflux uses AI.</p>
             </div>
             <Switch
               checked={shareReflux}
-              label="Share reflux triggers with the coach"
+              label="Share reflux triggers with AI"
               onChange={async (on) => {
                 setShareReflux(on);
                 await setSetting("coachShareReflux", on);
-                notify(on ? "Coach will see your triggers" : "Coach won't see your triggers");
+                notify(on ? "Coach & planner will see your triggers" : "Coach & planner won't see your triggers");
               }}
             />
           </div>

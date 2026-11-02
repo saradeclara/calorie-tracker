@@ -21,11 +21,12 @@ import { adjustmentFor, useGarminBurn, useGarminDay, useProfile } from "@/lib/ga
 import { GarminCard } from "./GarminCard";
 import { WeightView } from "./WeightView";
 import { CoachView } from "./CoachView";
+import { PlanView } from "./PlanView";
 import { WeightInput } from "./WeightInput";
 
 export function App() {
   const [date, setDate] = useState<string | null>(null);
-  const [view, setView] = useState<"today" | "weight" | "coach" | "reflux" | "settings">("today");
+  const [view, setView] = useState<"today" | "weight" | "plan" | "coach" | "reflux" | "settings">("today");
   const [adding, setAdding] = useState<Meal | null>(null);
   const [editing, setEditing] = useState<FoodEntry | null>(null);
   const [toast, setToast] = useState<string | null>(null);
@@ -83,6 +84,8 @@ export function App() {
         <RefluxView foods={foods} />
       ) : view === "weight" ? (
         <WeightView notify={notify} />
+      ) : view === "plan" ? (
+        <PlanView notify={notify} />
       ) : view === "coach" ? (
         <CoachView notify={notify} />
       ) : (
@@ -108,7 +111,7 @@ export function App() {
                 <button
                   className="grid h-10 w-10 place-items-center rounded-full text-muted active:bg-soft disabled:opacity-30"
                   onClick={() => setDate(addDays(date, 1))}
-                  disabled={date >= todayKey()}
+                  disabled={date >= addDays(todayKey(), 7)}
                   aria-label="Next day"
                 >
                   <Icon name="right" />

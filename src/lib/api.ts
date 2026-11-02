@@ -82,3 +82,20 @@ export async function getGarminBurn(end: string, days = 28): Promise<GarminBurn>
   if (!res.ok) throw new Error(await errorMessage(res));
   return res.json();
 }
+
+export interface PlanResponse {
+  message: string;
+  plan: import("./plan").MealPlan;
+  check: { totals: import("./types").Nutrients; min: number; max: number; within: boolean; problem: string | null };
+  attempts: number;
+}
+
+export function requestPlan(body: {
+  dayLabel: string;
+  targets: import("./plan").PlanTargets;
+  messages: { role: "user" | "assistant"; content: string }[];
+  plan?: import("./plan").MealPlan | null;
+  triggers?: string[];
+}) {
+  return postAi<PlanResponse>("/api/plan", body);
+}
