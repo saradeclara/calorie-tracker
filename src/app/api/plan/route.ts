@@ -1,6 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { MODEL, TruncatedReplyError, anthropic, describeError, guard, quickThinking } from "@/lib/server/ai";
-import { MealPlan, PlanTargets, calorieWindow, checkPlan, normalisePlan } from "@/lib/plan";
+import { MealPlan, PlanKit, PlanTargets, applyKits, calorieWindow, checkPlan, normalisePlan } from "@/lib/plan";
 
 export const maxDuration = 60;
 
@@ -16,9 +16,11 @@ interface Body {
   plan?: MealPlan | null;
   /** Only present when the user shares reflux triggers */
   triggers?: string[];
+  /** Saved meal-kit recipes the user ticked for this plan */
+  kits?: PlanKit[];
 }
 
-function system(t: PlanTargets, dayLabel: string, triggers: string[]) {
+function system(t: PlanTargets, dayLabel: string, triggers: string[], kits: PlanKit[]) {
   const { min, max } = calorieWindow(t);
   return `You plan one day of meals for the user of a personal calorie tracking app in the UK.
 
@@ -33,12 +35,19 @@ The day: ${dayLabel}.
     triggers.length
       ? `\n- Avoid these foods, which give them reflux: ${triggers.join("; ")}.`
       : ""
+  }${
+    kits.length
+      ? `\n\nMeal kits they have (Gousto/HelloFresh-style recipes with exact per-serving nutrition from the card). Include EACH of these exactly once, as a whole main meal (usually dinner or lunch), as a single item with its "kitId", name as given and portion "1 serving". Use these exact numbers; plan everything else around them:\n${kits
+          .map((k) => `- kitId ${k.id}: ${k.brand ? `${k.brand} · ` : ""}${k.name}: ${k.kcal} kcal, protein ${k.protein} g, carbs ${k.carbs} g, fat ${k.fat} g, fibre ${k.fibre} g`)
+          .join("\n")}\nIf they ask for a meal to be a kit, use the kit item; add sides only if they fit.`
+      : ""
   }
 
 When refining: change only what they ask for (plus whatever is needed to stay within ${min}–${max} kcal), keep the rest.
 
 Reply with ONLY a JSON object, no other text:
-{"message":"one or two short sentences to the user about the plan or what you changed","plan":{"meals":[{"meal":"breakfast","title":"...","method":"...","items":[{"name":"...","portion":"...","kcal":0,"protein":0,"carbs":0,"fat":0,"fibre":0}]}],"notes":"optional short tip"}}`;
+{"message":"one or two short sentences to the user about the plan or what you changed","plan":{"meals":[{"meal":"breakfast","title":"...","method":"...","items":[{"name":"...","portion":"...","kcal":0,"protein":0,"carbs":0,"fat":0,"fibre":0}]}],"notes":"optional short tip"}}
+(Kit items also have "kitId": <number>.)`;
 }
 
 function parse(text: string) {
@@ -69,6 +78,17 @@ export async function POST(request: Request) {
     return Response.json({ error: "Describe the plan you'd like." }, { status: 400 });
   }
   const triggers = Array.isArray(body.triggers) ? body.triggers.filter((x) => typeof x === "string").slice(0, 60) : [];
+  const kits: PlanKit[] = (Array.isArray(body.kits) ? body.kits : [])
+    .filter((k) => Number.isInteger(k?.id) && typeof k.name === "string" && Number(k.kcal) > 0)
+    .slice(0, 4)
+    .map((k) => ({ id: k.id, name: k.name.slice(0, 120), brand: k.brand?.slice(0, 40), kcal: +k.kcal, protein: +k.protein || 0, carbs: +k.carbs || 0, fat: +k.fat || 0, fibre: +k.fibre || 0 }));
+  const kitKcal = kits.reduce((a, k) => a + k.kcal, 0);
+  if (kitKcal > calorieWindow(t).max) {
+    return Response.json(
+      { error: `Your ticked kits add up to ${Math.round(kitKcal)} kcal, more than your ${calorieWindow(t).max} kcal goal on their own. Untick one.` },
+      { status: 400 },
+    );
+  }
 
   // The current plan rides along with the latest request when refining.
   const messages: Anthropic.MessageParam[] = turns.map((m, i) =>
@@ -78,7 +98,7 @@ export async function POST(request: Request) {
   );
 
   const client = anthropic();
-  const sys = system(t, String(body.dayLabel || "tomorrow").slice(0, 60), triggers);
+  const sys = system(t, String(body.dayLabel || "tomorrow").slice(0, 60), triggers, kits);
   try {
     let lastGood: { message: string; plan: MealPlan } | null = null;
     // First attempt + up to 2 repairs if the totals land outside the window (or the JSON is bad).
@@ -97,14 +117,21 @@ export async function POST(request: Request) {
         messages.push({ role: "assistant", content: text }, { role: "user", content: "That wasn't valid JSON in the required shape. Reply with only the JSON object." });
         continue;
       }
+      // Kit items get the card's numbers before anything is checked.
+      const kitted = applyKits(parsed.plan, kits);
+      parsed = { ...parsed, plan: kitted.plan };
       const check = checkPlan(parsed.plan, t);
-      if (check.within) return Response.json({ ...parsed, check, attempts: attempt + 1 });
+      if (check.within && !kitted.missing.length) return Response.json({ ...parsed, check, attempts: attempt + 1 });
       lastGood = parsed;
+      const problems = [
+        kitted.missing.length ? `These meal kits are missing and must each be included once, as an item with its kitId: ${kitted.missing.join("; ")}.` : "",
+        check.within ? "" : `${check.problem} (Kit items count at their card values, which can't change.)`,
+      ].filter(Boolean);
       messages.push(
         { role: "assistant", content: text },
         {
           role: "user",
-          content: `${check.problem} Adjust portions or swap items so the total is between ${check.min} and ${check.max} kcal, keeping what I asked for. Recalculate each item's numbers. Reply with only the JSON object.`,
+          content: `${problems.join(" ")} Fix this so the total is between ${check.min} and ${check.max} kcal, keeping what I asked for. Recalculate each non-kit item's numbers. Reply with only the JSON object.`,
         },
       );
     }

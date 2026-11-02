@@ -6,7 +6,8 @@ import { db } from "@/lib/db";
 import { requestPlan } from "@/lib/api";
 import { addDays, todayKey } from "@/lib/dates";
 import { calorieWindow, type PlanTargets } from "@/lib/plan";
-import { PLAN_KEY, dayLabel, logPlan, planTargets, planTurn, savePlan, sharedTriggers, type StoredPlan } from "@/lib/planner";
+import { PLAN_KEY, dayLabel, logPlan, planTargets, planTurn, savePlan, sharedTriggers, tickedKits, type StoredPlan } from "@/lib/planner";
+import { KitPicker } from "./KitPicker";
 import { useFoodIndex } from "@/lib/useFoods";
 import { MEALS } from "@/lib/types";
 import { Bar, Button, Icon, Segmented, Spinner, cx } from "./ui";
@@ -57,6 +58,7 @@ export function PlanView({ notify }: { notify: (m: string) => void }) {
         messages: chat.map(({ role, content }) => ({ role, content })),
         plan: stored?.plan ?? null,
         triggers: await sharedTriggers(),
+        kits: await tickedKits(),
       });
       await savePlan({
         date,
@@ -126,6 +128,7 @@ export function PlanView({ notify }: { notify: (m: string) => void }) {
               </button>
             )}
           </section>
+          <KitPicker notify={notify} />
         </div>
       </div>
     );
@@ -198,6 +201,11 @@ export function PlanView({ notify }: { notify: (m: string) => void }) {
                     <li key={ii} className="text-sm">
                       <div className="flex justify-between gap-3">
                         <span>
+                          {i.kitId !== undefined && (
+                            <span className="mr-1.5 rounded-full bg-soft px-1.5 py-0.5 align-middle text-[10px] font-semibold uppercase tracking-wide text-muted">
+                              {i.brand || "Kit"}
+                            </span>
+                          )}
                           {i.name}
                           {i.portion && <span className="text-muted"> · {i.portion}</span>}
                         </span>
@@ -231,6 +239,8 @@ export function PlanView({ notify }: { notify: (m: string) => void }) {
           <Icon name={stored.loggedAt ? "check" : "plus"} className="h-4 w-4" />
           {stored.loggedAt ? "Logged · log again" : `Log whole plan to ${dayLabel(stored.date).split(" ")[0]}`}
         </Button>
+
+        <KitPicker notify={notify} />
 
         {/* Refine chat */}
         <section className="space-y-2 pt-2">

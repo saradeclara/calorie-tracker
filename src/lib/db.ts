@@ -85,6 +85,10 @@ async function upsertFood(foods: FoodsTable, item: FoodFields, at: number, used:
   if (existing?.id !== undefined) {
     await foods.update(existing.id, {
       ...latest,
+      // A saved kit recipe keeps its card numbers when logged as "1 serving".
+      ...(existing.kind === "recipe" && item.portion === "1 serving"
+        ? { kcal: existing.kcal, protein: existing.protein, carbs: existing.carbs, fat: existing.fat, fibre: existing.fibre }
+        : {}),
       barcode: existing.barcode ?? item.barcode,
       useCount: existing.useCount + (used ? 1 : 0),
       lastUsed: Math.max(existing.lastUsed, at),
@@ -180,6 +184,34 @@ export async function ensureFoodId(entry: FoodEntry): Promise<number> {
     const foodId = await upsertFood(db.foods, entry, entry.createdAt, false);
     await db.entries.update(entry.id!, { foodId });
     return foodId;
+  });
+}
+
+/* ---------- Meal-kit recipes ---------- */
+
+/** Save (or update) a meal-kit recipe in the food database. Returns its id. */
+export function saveRecipe(r: { name: string; provider?: string; kcal: number; protein: number; carbs: number; fat: number; fibre: number }) {
+  return db.transaction("rw", db.foods, async () => {
+    const brand = r.provider?.trim() || undefined;
+    const fields = {
+      name: r.name.trim(),
+      brand,
+      nameKey: nameKeyOf(r.name, brand),
+      portion: "1 serving",
+      source: "manual" as const,
+      kcal: r.kcal,
+      protein: r.protein,
+      carbs: r.carbs,
+      fat: r.fat,
+      fibre: r.fibre,
+      kind: "recipe" as const,
+    };
+    const existing = await db.foods.where("nameKey").equals(fields.nameKey).first();
+    if (existing?.id !== undefined) {
+      await db.foods.update(existing.id, { ...fields, lastUsed: Date.now() });
+      return existing.id;
+    }
+    return (await db.foods.add({ ...fields, useCount: 0, lastUsed: Date.now(), trigger: false })) as number;
   });
 }
 

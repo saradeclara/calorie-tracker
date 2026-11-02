@@ -1,6 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
 import type { AiEstimate, AiItem } from "@/lib/types";
-import { MODEL, TruncatedReplyError, anthropic, describeError, guard, quickThinking } from "@/lib/server/ai";
+import { MODEL, TruncatedReplyError, anthropic, describeError, guard, parseDataUrl, quickThinking } from "@/lib/server/ai";
 
 // Photo estimates can take a while; don't let the platform's default timeout cut them off.
 export const maxDuration = 60;
@@ -43,14 +43,6 @@ const SCHEMA = {
     notes: { type: "string" },
   },
 } as const;
-
-type ImageType = "image/jpeg" | "image/png" | "image/webp" | "image/gif";
-
-function parseDataUrl(dataUrl: string): { mediaType: ImageType; data: string } | null {
-  const match = /^data:(image\/(?:jpeg|png|webp|gif));base64,(.+)$/.exec(dataUrl);
-  if (!match) return null;
-  return { mediaType: match[1] as ImageType, data: match[2] };
-}
 
 function clean(n: unknown): number {
   const v = Number(n);

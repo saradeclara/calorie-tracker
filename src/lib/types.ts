@@ -107,6 +107,8 @@ export interface Food extends Nutrients {
   lastUsed: number;
   trigger: boolean;
   triggerSeverity?: Severity;
+  /** "recipe" = a saved meal-kit recipe (per serving, numbers from the card) */
+  kind?: "recipe";
 }
 
 /** Reflux reactions (no longer used by the UI; the table is kept so older data stays valid). */
@@ -174,4 +176,18 @@ export interface GarminBurn {
   to?: string;
   avgTotal?: number | null;
   avgActive?: number | null;
+}
+
+/** What the recipe-card reader found (per serving). null = not printed. */
+export interface RecipeCard {
+  found: boolean;
+  name: string;
+  provider: string;
+  kcal: number | null;
+  protein: number | null;
+  carbs: number | null;
+  fat: number | null;
+  fibre: number | null;
+  servingNote: string;
+  notes: string;
 }

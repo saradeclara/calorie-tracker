@@ -41,7 +41,12 @@ export function RecentTab({ date, meal, onAdded }: { date: string; meal: Meal; o
               className="flex w-full items-center gap-3 px-4 py-3 text-left active:bg-soft"
             >
               <div className="min-w-0 flex-1">
-                <div className="truncate font-medium">{f.name}</div>
+                <div className="flex items-center gap-1.5">
+                  <span className="truncate font-medium">{f.name}</span>
+                  {f.kind === "recipe" && (
+                    <span className="shrink-0 rounded-full bg-soft px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted">Kit</span>
+                  )}
+                </div>
                 <div className="truncate text-xs text-muted">{[f.brand, f.portion].filter(Boolean).join(" · ") || "—"}</div>
                 {f.trigger && <TriggerWarning food={f} compact />}
               </div>

@@ -3,6 +3,16 @@ import type { Meal, Nutrients } from "./types";
 export interface PlanItem extends Nutrients {
   name: string;
   portion?: string;
+  /** Set when this item is one of the user's saved meal-kit recipes */
+  kitId?: number;
+  brand?: string;
+}
+
+/** A saved meal-kit recipe offered to the planner (per serving, from the card). */
+export interface PlanKit extends Nutrients {
+  id: number;
+  name: string;
+  brand?: string;
 }
 
 export interface PlanMeal {
@@ -73,6 +83,7 @@ export function normalisePlan(raw: any): MealPlan {
         .map((i: any) => ({
           name: str(i.name, 100),
           portion: str(i.portion, 100) || undefined,
+          kitId: Number.isInteger(i.kitId) ? i.kitId : undefined,
           kcal: num(i.kcal, 0),
           protein: num(i.protein),
           carbs: num(i.carbs),
@@ -87,3 +98,22 @@ export function normalisePlan(raw: any): MealPlan {
   return { meals, notes: str(raw?.notes, 400) || undefined };
 }
 /* eslint-enable @typescript-eslint/no-explicit-any */
+
+/**
+ * Kit items always carry the card's numbers, whatever the model wrote. Unknown kitIds are
+ * dropped (treated as normal food). Returns the names of ticked kits missing from the plan.
+ */
+export function applyKits(plan: MealPlan, kits: PlanKit[]): { plan: MealPlan; missing: string[] } {
+  const byId = new Map(kits.map((k) => [k.id, k]));
+  const used = new Set<number>();
+  const meals = plan.meals.map((m) => ({
+    ...m,
+    items: m.items.map((i) => {
+      const k = i.kitId !== undefined ? byId.get(i.kitId) : undefined;
+      if (!k) return { ...i, kitId: undefined };
+      used.add(k.id);
+      return { ...i, kitId: k.id, name: k.name, brand: k.brand, portion: "1 serving", kcal: k.kcal, protein: k.protein, carbs: k.carbs, fat: k.fat, fibre: k.fibre };
+    }),
+  }));
+  return { plan: { ...plan, meals }, missing: kits.filter((k) => !used.has(k.id)).map((k) => k.name) };
+}

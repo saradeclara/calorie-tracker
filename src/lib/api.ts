@@ -96,6 +96,11 @@ export function requestPlan(body: {
   messages: { role: "user" | "assistant"; content: string }[];
   plan?: import("./plan").MealPlan | null;
   triggers?: string[];
+  kits?: import("./plan").PlanKit[];
 }) {
   return postAi<PlanResponse>("/api/plan", body);
+}
+
+export function readRecipeCard(image: string) {
+  return postAi<import("./types").RecipeCard>("/api/recipe-card", { image });
 }

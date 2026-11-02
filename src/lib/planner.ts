@@ -1,7 +1,7 @@
 import { db, getGoals, getSetting, logEntries, setSetting } from "./db";
 import { fromKey, todayKey, addDays } from "./dates";
 import type { PlanResponse } from "./api";
-import type { MealPlan, PlanTargets } from "./plan";
+import type { MealPlan, PlanKit, PlanTargets } from "./plan";
 import type { Profile } from "./deficit";
 
 export interface PlanTurn {
@@ -58,6 +58,7 @@ export async function logPlan(p: StoredPlan) {
     p.plan.meals.flatMap((m) =>
       m.items.map((i) => ({
         name: i.name,
+        brand: i.brand, // kit items link back to the saved recipe
         portion: i.portion,
         kcal: i.kcal,
         protein: i.protein,
@@ -71,4 +72,22 @@ export async function logPlan(p: StoredPlan) {
     ),
   );
   await savePlan({ ...p, loggedAt: Date.now() });
+}
+
+/* ---------- Meal kits for the planner ---------- */
+
+export const PLAN_KITS_KEY = "planKits";
+
+/** The saved kit recipes currently ticked for planning. */
+export async function tickedKits(): Promise<PlanKit[]> {
+  const ids = await getSetting<number[]>(PLAN_KITS_KEY, []);
+  if (!ids.length) return [];
+  const foods = await db.foods.bulkGet(ids);
+  return foods
+    .filter((f): f is NonNullable<typeof f> => !!f && f.kind === "recipe")
+    .map((f) => ({ id: f.id!, name: f.name, brand: f.brand, kcal: f.kcal, protein: f.protein, carbs: f.carbs, fat: f.fat, fibre: f.fibre }));
+}
+
+export function setTickedKits(ids: number[]) {
+  return setSetting(PLAN_KITS_KEY, ids);
 }

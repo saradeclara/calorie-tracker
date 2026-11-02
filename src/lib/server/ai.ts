@@ -82,3 +82,11 @@ export function describeError(err: unknown, model: string): string {
   if (err instanceof SyntaxError) return "The AI replied in an unexpected format. Try again.";
   return `AI estimate failed: ${(err as Error)?.message ?? "unknown error"}`;
 }
+
+type ImageType = "image/jpeg" | "image/png" | "image/webp" | "image/gif";
+
+export function parseDataUrl(dataUrl: string): { mediaType: ImageType; data: string } | null {
+  const match = /^data:(image\/(?:jpeg|png|webp|gif));base64,(.+)$/.exec(dataUrl);
+  if (!match) return null;
+  return { mediaType: match[1] as ImageType, data: match[2] };
+}
