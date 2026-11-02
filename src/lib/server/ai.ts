@@ -7,6 +7,16 @@ export const MODEL = (process.env.ANTHROPIC_MODEL || "claude-sonnet-5-5").trim()
  * The passcode stops anyone who finds your URL from spending your API credit.
  */
 export function guard(request: Request): Response | null {
+  const denied = guardPasscode(request);
+  if (denied) return denied;
+  if (!process.env.ANTHROPIC_API_KEY) {
+    return Response.json({ error: "Server isn't configured: set ANTHROPIC_API_KEY." }, { status: 500 });
+  }
+  return null;
+}
+
+/** Just the app passcode check (used by non-AI routes that still spend a private key). */
+export function guardPasscode(request: Request): Response | null {
   // Trim so a stray space/newline pasted into Vercel doesn't break the comparison.
   const expected = process.env.APP_PASSCODE?.trim();
   if (!expected && process.env.NODE_ENV === "production") {
@@ -17,9 +27,6 @@ export function guard(request: Request): Response | null {
   }
   if (expected && (request.headers.get("x-app-passcode") ?? "").trim() !== expected) {
     return Response.json({ error: "Wrong or missing passcode. Add it in Settings." }, { status: 401 });
-  }
-  if (!process.env.ANTHROPIC_API_KEY) {
-    return Response.json({ error: "Server isn't configured: set ANTHROPIC_API_KEY." }, { status: 500 });
   }
   return null;
 }

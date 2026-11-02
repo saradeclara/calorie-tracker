@@ -2,12 +2,14 @@ import { Goals, Nutrients } from "@/lib/types";
 import { round } from "@/lib/nutrition";
 import { Bar, MACRO_META, Ring } from "./ui";
 
-export function Summary({ totals, goals }: { totals: Nutrients; goals: Goals }) {
-  const remaining = Math.round(goals.kcal - totals.kcal);
+/** `bonus` = extra calories earned from Garmin activity (positive adjustment). */
+export function Summary({ totals, goals, bonus = 0 }: { totals: Nutrients; goals: Goals; bonus?: number }) {
+  const budget = goals.kcal + bonus;
+  const remaining = Math.round(budget - totals.kcal);
   return (
     <section className="rounded-3xl bg-card p-5 shadow-sm">
       <div className="flex items-center gap-5">
-        <Ring value={totals.kcal} max={goals.kcal}>
+        <Ring value={totals.kcal} max={budget}>
           <div>
             <div className="tabular text-3xl font-bold leading-none">{Math.abs(remaining)}</div>
             <div className="mt-1 text-xs text-muted">{remaining >= 0 ? "kcal left" : "kcal over"}</div>
@@ -16,6 +18,7 @@ export function Summary({ totals, goals }: { totals: Nutrients; goals: Goals }) 
         <div className="flex-1 space-y-1 text-sm">
           <Stat label="Eaten" value={`${Math.round(totals.kcal)}`} />
           <Stat label="Goal" value={`${goals.kcal}`} />
+          {bonus > 0 && <Stat label="Garmin" value={`+${bonus}`} />}
           <div className="pt-1 text-xs text-muted">kcal</div>
         </div>
       </div>

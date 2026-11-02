@@ -133,3 +133,22 @@ export interface MealIdea extends Nutrients {
   method: string;
   portion: string;
 }
+
+/* ---------- Garmin ---------- */
+
+export interface GarminActivity {
+  id: string;
+  name: string;
+  type: string;
+  minutes: number;
+  kcal: number;
+  start: string;
+}
+
+export interface GarminDay {
+  configured: boolean;
+  /** Garmin's active calories for the day so far (all movement, incl. workouts) */
+  activeKcal?: number | null;
+  totalKcal?: number | null;
+  activities?: GarminActivity[];
+}

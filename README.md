@@ -32,11 +32,28 @@ public/sw.js                          Service worker
    | `ANTHROPIC_API_KEY` | Your key from console.anthropic.com |
    | `APP_PASSCODE` | Any long random string. Stops strangers who find your URL from spending your API credit |
    | `ANTHROPIC_MODEL` | *(optional)* defaults to `claude-sonnet-5-5`; `claude-haiku-5-5` is cheaper and faster |
+   | `GARMIN_PERSONAL_API_KEY` | *(optional)* see [Garmin](#garmin-optional) |
 
 3. Deploy, then open the URL on your phone:
    - **iPhone (Safari):** Share → **Add to Home Screen**
    - **Android (Chrome):** ⋮ menu → **Install app**
 4. In the app, go to **Goals & settings**, enter the same passcode and set your goals.
+
+## Garmin (optional)
+
+Shows your Garmin activities on the day view and adds a MyFitnessPal-style **calorie adjustment** (positive only):
+
+> projected burn = resting burn for the whole day (from the deficit calculator) + Garmin's active calories so far
+> adjustment = projected burn − your maintenance (from the deficit calculator), if above zero
+
+Maintenance already assumes your chosen activity level, so workouts aren't counted twice. Fill in the deficit calculator to enable the adjustment.
+
+Setup:
+1. Sign in to **Garmin Connect on the web** → Personal API Key → **Create Key**. Accept the terms and pick an expiry. The key is shown once.
+2. In Vercel → Settings → Environment Variables, add `GARMIN_PERSONAL_API_KEY` with that key, then redeploy.
+3. When the key expires, create a new one and update the variable.
+
+The key stays on the server. The phone only talks to `/api/garmin/day`, which requires your app passcode.
 
 ## Run locally
 

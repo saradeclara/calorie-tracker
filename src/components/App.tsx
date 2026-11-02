@@ -17,6 +17,8 @@ import { InstallHint } from "./InstallHint";
 import { RefluxView } from "./RefluxView";
 import { TabBar } from "./TabBar";
 import { useFoodIndex } from "@/lib/useFoods";
+import { adjustmentFor, useGarminDay, useProfile } from "@/lib/garmin";
+import { GarminCard } from "./GarminCard";
 
 export function App() {
   const [date, setDate] = useState<string | null>(null);
@@ -55,6 +57,8 @@ export function App() {
   );
   const goals = useLiveQuery(() => getGoals(), []) ?? DEFAULT_GOALS;
   const foods = useFoodIndex();
+  const profile = useProfile();
+  const garmin = useGarminDay(date);
 
   const notify = useCallback((msg: string) => {
     setToast(msg);
@@ -64,6 +68,7 @@ export function App() {
   if (!date) return <div className="min-h-dvh bg-bg" />;
 
   const totals = sum(entries ?? []);
+  const adj = garmin.data?.configured ? adjustmentFor(garmin.data.activeKcal, profile) : null;
   const waterMl = (water ?? []).reduce((acc, w) => acc + w.ml, 0);
 
   return (
@@ -106,8 +111,16 @@ export function App() {
 
           <main className="space-y-3 px-4 pb-44">
             <InstallHint />
-            <Summary totals={totals} goals={goals} />
+            <Summary totals={totals} goals={goals} bonus={adj?.adjustment ?? 0} />
             <WaterCard date={date} totalMl={waterMl} goalMl={goals.waterMl} logs={water ?? []} />
+            <GarminCard
+              loading={garmin.loading}
+              data={garmin.data}
+              error={garmin.error}
+              adj={adj}
+              hasProfile={!!profile}
+              onReload={garmin.reload}
+            />
             {MEALS.map((m) => (
               <MealSection
                 key={m.id}
