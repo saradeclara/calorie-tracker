@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import { readRecipeCard } from "@/lib/api";
 import { logEntry, saveRecipe } from "@/lib/db";
 import { resizeImage } from "@/lib/image";
+import { recordError } from "@/lib/errors";
 import { MEALS, type Meal, type RecipeCard } from "@/lib/types";
 import { Button, Field, Icon, Spinner, inputClass } from "./ui";
 import { EntryForm } from "./EntryForm";
@@ -42,6 +43,7 @@ export function RecipeCardFlow({
       setCard(c);
       setProvider(c.provider);
     } catch (e) {
+      recordError(e, `kit card: ${file.type || "unknown type"}, ${Math.round(file.size / 1024)} KB`);
       setError((e as Error).message);
     } finally {
       setReading(false);

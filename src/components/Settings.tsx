@@ -6,6 +6,7 @@ import { Goals } from "@/lib/types";
 import { Button, Field, Icon, NumberInput, Switch, inputClass } from "./ui";
 import { DeficitCalculator } from "./DeficitCalculator";
 import { macrosFor } from "@/lib/deficit";
+import { clearLastError, lastError, type RecordedError } from "@/lib/errors";
 
 type GoalDraft = Record<keyof Goals, number | "">;
 
@@ -24,6 +25,8 @@ export function Settings({ onBack, notify }: { onBack: () => void; notify: (m: s
   const [persisted, setPersisted] = useState<boolean | null>(null);
   const [weightKg, setWeightKg] = useState<number | undefined>(undefined);
   const [shareReflux, setShareReflux] = useState(false);
+  // Settings only renders client-side, so localStorage can be read directly.
+  const [problem, setProblem] = useState<RecordedError | null>(lastError);
   const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -197,6 +200,18 @@ export function Settings({ onBack, notify }: { onBack: () => void; notify: (m: s
         <p className="px-2 text-center text-xs text-muted">
           Barcode data from Open Food Facts (openfoodfacts.org), licensed ODbL. AI estimates are approximate.
         </p>
+        {problem && (
+          <section className="space-y-2 rounded-3xl bg-card p-5 text-xs shadow-sm">
+            <div className="flex items-center justify-between">
+              <h2 className="text-sm font-semibold">Last problem</h2>
+              <button className="text-muted underline" onClick={() => (clearLastError(), setProblem(null))}>
+                Clear
+              </button>
+            </div>
+            <p className="text-muted">{new Date(problem.at).toLocaleString("en-GB")}</p>
+            <pre className="max-h-40 overflow-auto whitespace-pre-wrap rounded-xl bg-soft p-3">{`${problem.message}\n${problem.where}`}</pre>
+          </section>
+        )}
         <p className="tabular px-2 text-center text-xs text-muted">Version {process.env.NEXT_PUBLIC_BUILD}</p>
       </div>
     </div>
