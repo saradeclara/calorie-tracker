@@ -17,7 +17,7 @@ import { InstallHint } from "./InstallHint";
 import { RefluxView } from "./RefluxView";
 import { TabBar } from "./TabBar";
 import { useFoodIndex } from "@/lib/useFoods";
-import { adjustmentFor, useGarminDay, useProfile } from "@/lib/garmin";
+import { adjustmentFor, useGarminBurn, useGarminDay, useProfile } from "@/lib/garmin";
 import { GarminCard } from "./GarminCard";
 import { WeightView } from "./WeightView";
 import { WeightInput } from "./WeightInput";
@@ -61,6 +61,7 @@ export function App() {
   const foods = useFoodIndex();
   const profile = useProfile();
   const garmin = useGarminDay(date);
+  const { burn } = useGarminBurn();
 
   const notify = useCallback((msg: string) => {
     setToast(msg);
@@ -70,7 +71,7 @@ export function App() {
   if (!date) return <div className="min-h-dvh bg-bg" />;
 
   const totals = sum(entries ?? []);
-  const adj = garmin.data?.configured ? adjustmentFor(garmin.data.activeKcal, profile) : null;
+  const adj = garmin.data?.configured ? adjustmentFor(garmin.data.activeKcal, profile, burn) : null;
   const waterMl = (water ?? []).reduce((acc, w) => acc + w.ml, 0);
 
   return (

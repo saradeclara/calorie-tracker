@@ -1,5 +1,5 @@
 import { getSetting } from "./db";
-import type { AiEstimate, GarminDay, MealIdea, Product } from "./types";
+import type { AiEstimate, GarminBurn, GarminDay, MealIdea, Product } from "./types";
 
 async function errorMessage(res: Response): Promise<string> {
   const text = await res.text().catch(() => "");
@@ -60,6 +60,21 @@ export async function getGarminDay(date: string): Promise<GarminDay> {
     res = await fetch(`/api/garmin/day?date=${date}`, {
       headers: { "x-app-passcode": passcode },
       signal: AbortSignal.timeout(30_000),
+    });
+  } catch {
+    throw new Error("Couldn't reach Garmin. Check your connection.");
+  }
+  if (!res.ok) throw new Error(await errorMessage(res));
+  return res.json();
+}
+
+export async function getGarminBurn(end: string, days = 28): Promise<GarminBurn> {
+  const passcode = await getSetting<string>("passcode", "");
+  let res: Response;
+  try {
+    res = await fetch(`/api/garmin/burn?end=${end}&days=${days}`, {
+      headers: { "x-app-passcode": passcode },
+      signal: AbortSignal.timeout(45_000),
     });
   } catch {
     throw new Error("Couldn't reach Garmin. Check your connection.");

@@ -164,3 +164,14 @@ export interface GarminDay {
   stepGoal?: number | null;
   activities?: GarminActivity[];
 }
+
+/** Average daily burn from Garmin over recent complete, worn days. */
+export interface GarminBurn {
+  configured: boolean;
+  /** Number of days that counted */
+  days?: number;
+  from?: string;
+  to?: string;
+  avgTotal?: number | null;
+  avgActive?: number | null;
+}

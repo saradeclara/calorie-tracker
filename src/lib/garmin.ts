@@ -2,28 +2,68 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useLiveQuery } from "dexie-react-hooks";
-import { getGarminDay } from "./api";
-import { db } from "./db";
+import { getGarminBurn, getGarminDay } from "./api";
+import { db, setSetting } from "./db";
 import { Profile, calculate } from "./deficit";
-import { todayKey } from "./dates";
-import type { GarminDay } from "./types";
+import { addDays, todayKey } from "./dates";
+import type { GarminBurn, GarminDay } from "./types";
 
 /**
- * MyFitnessPal-style calorie adjustment, positive only:
- *   projected burn = your resting burn for the whole day + Garmin's active calories so far
- *   adjustment     = projected burn − your maintenance (from the deficit calculator), if > 0
- * Maintenance already assumes your chosen activity level, so workouts aren't counted twice.
- * Resting uses the calculator's formula rather than Garmin's, so today isn't skewed by
- * Garmin only counting resting calories up to now.
+ * MyFitnessPal-style calorie adjustment, positive only.
+ *
+ * With Garmin maintenance (your average daily burn): you get today's active calories above
+ * your average active calories. The average day is already in your maintenance, so only the
+ * extra counts.
+ *
+ * With the formula: projected burn = formula resting for the whole day + Garmin active so far,
+ * minus maintenance (resting × activity level).
  */
-export function adjustmentFor(activeKcal: number | null | undefined, profile: Profile | null) {
+export function adjustmentFor(activeKcal: number | null | undefined, profile: Profile | null, burn?: GarminBurn | null) {
   if (activeKcal == null || !profile) return null;
-  const { bmr, maintenance } = calculate(profile);
-  const projected = bmr + Math.round(activeKcal);
-  return { resting: bmr, active: Math.round(activeKcal), projected, maintenance, adjustment: Math.max(0, projected - maintenance) };
+  const c = calculate(profile, burn);
+  const active = Math.round(activeKcal);
+  if (c.source === "garmin") {
+    const avgActive = burn!.avgActive!;
+    return { mode: "garmin" as const, active, avgActive, days: burn!.days!, maintenance: c.maintenance, adjustment: Math.max(0, active - avgActive) };
+  }
+  const projected = c.bmr + active;
+  return { mode: "formula" as const, resting: c.bmr, active, projected, maintenance: c.maintenance, adjustment: Math.max(0, projected - c.maintenance) };
 }
 
 export type Adjustment = NonNullable<ReturnType<typeof adjustmentFor>>;
+
+// One request at a time, shared by every component that wants the average.
+let inflight: Promise<unknown> | null = null;
+
+/**
+ * Your Garmin average daily burn over the last 28 complete days. Fetched at most once a day
+ * and kept in settings, so the calculator and the day view share it.
+ */
+export function useGarminBurn(): { burn: GarminBurn | null; loading: boolean; error?: string; refresh: () => void } {
+  // null = nothing cached yet; undefined = still reading (useLiveQuery's initial value).
+  const row = useLiveQuery(() => db.settings.get("garminBurn").then((r) => r ?? null), []);
+  const cached = row?.value as (GarminBurn & { fetchedOn?: string }) | undefined;
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string>();
+
+  const fetchBurn = useCallback(() => {
+    setLoading(true);
+    setError(undefined);
+    inflight ??= getGarminBurn(addDays(todayKey(), -1))
+      .then((b) => setSetting("garminBurn", { ...b, fetchedOn: todayKey() }))
+      .finally(() => (inflight = null));
+    inflight.catch((e) => setError((e as Error).message)).finally(() => setLoading(false));
+  }, []);
+
+  useEffect(() => {
+    if (row === undefined) return; // still reading the cache; null (never fetched) falls through
+    if (cached?.fetchedOn === todayKey()) return;
+    const t = window.setTimeout(fetchBurn, 0); // after render; once a day
+    return () => window.clearTimeout(t);
+  }, [row, cached?.fetchedOn, fetchBurn]);
+
+  return { burn: cached ?? null, loading, error, refresh: fetchBurn };
+}
 
 /** The calculator profile, if it's filled in. */
 export function useProfile(): Profile | null {

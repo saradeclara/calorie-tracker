@@ -79,10 +79,21 @@ export function GarminCard({
                 <span className="tabular font-semibold text-protein">+{adj.adjustment}</span>
               </div>
               <p className="mt-2 text-xs text-muted">
-                Resting {adj.resting} + active {adj.active} = {adj.projected} kcal burned, vs your maintenance of {adj.maintenance}.{" "}
-                {adj.adjustment > 0
-                  ? "You get the difference."
-                  : "Nothing extra yet: your activity level already covers this much movement."}
+                {adj.mode === "garmin" ? (
+                  <>
+                    Active {adj.active} today vs your average of {adj.avgActive} (last {adj.days} days).{" "}
+                    {adj.adjustment > 0
+                      ? "You get the extra."
+                      : "Nothing extra yet: an average day is already in your maintenance."}
+                  </>
+                ) : (
+                  <>
+                    Resting {adj.resting} + active {adj.active} = {adj.projected} kcal burned, vs your maintenance of {adj.maintenance}.{" "}
+                    {adj.adjustment > 0
+                      ? "You get the difference."
+                      : "Nothing extra yet: your activity level already covers this much movement."}
+                  </>
+                )}
               </p>
             </>
           ) : (
