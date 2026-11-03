@@ -22,13 +22,13 @@ export function WaterCard({
   };
 
   return (
-    <section className="rounded-3xl bg-card p-5 shadow-sm">
-      <div className="mb-3 flex items-center justify-between">
-        <div className="flex items-center gap-2 font-semibold">
-          <Icon name="drop" className="h-5 w-5 text-water" /> Water
-        </div>
+    <section className="rounded-[1.375rem] bg-card p-5">
+      <div className="mb-3 flex items-baseline gap-3">
+        <h3 className="font-display flex items-center gap-2 self-center text-lg font-semibold">
+          <Icon name="drop" weight="fill" className="h-5 w-5 text-water" /> Water
+        </h3>
         <div className="tabular text-sm text-muted">
-          <span className="text-base font-semibold text-ink">{(totalMl / 1000).toFixed(2)}</span> / {(goalMl / 1000).toFixed(1)} L
+          <span className="font-display text-xl font-semibold text-ink">{(totalMl / 1000).toFixed(2)}</span> / {(goalMl / 1000).toFixed(1)} L
         </div>
       </div>
       <Bar value={totalMl} max={goalMl} color="var(--water)" />
@@ -37,7 +37,7 @@ export function WaterCard({
           <button
             key={ml}
             onClick={() => add(ml)}
-            className="h-10 flex-1 rounded-xl bg-water/10 text-sm font-semibold text-water active:scale-95"
+            className="h-10 flex-1 rounded-full bg-water/12 text-sm font-semibold text-water active:scale-95"
           >
             + {ml} ml
           </button>
@@ -45,7 +45,7 @@ export function WaterCard({
         <button
           onClick={undo}
           disabled={logs.length === 0}
-          className="h-10 rounded-xl bg-soft px-4 text-sm font-medium text-muted active:scale-95 disabled:opacity-40"
+          className="h-10 rounded-full bg-soft px-4 text-sm font-medium text-muted active:scale-95 disabled:opacity-40"
         >
           Undo
         </button>

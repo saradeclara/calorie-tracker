@@ -21,7 +21,7 @@ export class ErrorBoundary extends Component<{ children: ReactNode }, { error: E
         <h1 className="text-xl font-semibold">Something went wrong</h1>
         <p className="text-sm text-muted">Your data is safe. Here&apos;s what broke, in case you want to pass it on:</p>
         <pre className="max-h-48 overflow-auto whitespace-pre-wrap rounded-2xl bg-card p-4 text-xs">{this.state.error.message}</pre>
-        <button className="h-12 rounded-2xl bg-ink font-semibold text-bg" onClick={() => location.reload()}>
+        <button className="h-12 rounded-full bg-brand font-semibold text-on-brand" onClick={() => location.reload()}>
           Reload the app
         </button>
       </div>

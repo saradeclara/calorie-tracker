@@ -1,6 +1,42 @@
 "use client";
 
 import { ReactNode, useEffect } from "react";
+import {
+  ArrowClockwise,
+  Barcode,
+  BookOpenText,
+  BowlFood,
+  Camera,
+  CaretLeft,
+  CaretRight,
+  ChatCircleDots,
+  Check,
+  ClockCounterClockwise,
+  Coffee,
+  CookingPot,
+  DownloadSimple,
+  Drop,
+  Fire,
+  Footprints,
+  GearSix,
+  MagnifyingGlass,
+  Minus,
+  Notepad,
+  OrangeSlice,
+  PaperPlaneTilt,
+  PencilSimple,
+  Plus,
+  Scales,
+  Scan,
+  Sneaker,
+  Sparkle,
+  SunHorizon,
+  Trash,
+  UploadSimple,
+  X,
+  type Icon as PhosphorIcon,
+  type IconWeight,
+} from "@phosphor-icons/react";
 
 export function cx(...classes: (string | false | null | undefined)[]) {
   return classes.filter(Boolean).join(" ");
@@ -41,15 +77,16 @@ export function Sheet({
         className="animate-fade absolute inset-0 bg-black/40"
         onClick={onClose}
       />
-      <div className="animate-sheet relative mx-auto flex max-h-[92dvh] w-full max-w-lg flex-col rounded-t-3xl bg-bg shadow-2xl">
-        <div className="flex items-center justify-between px-5 pt-4 pb-2">
-          <h2 className="text-lg font-semibold">{title}</h2>
+      <div className="animate-sheet relative mx-auto flex max-h-[92dvh] w-full max-w-lg flex-col rounded-t-[2rem] bg-bg shadow-2xl">
+        <div className="mx-auto mt-2 h-1 w-10 rounded-full bg-line" aria-hidden />
+        <div className="flex items-center justify-between gap-3 px-5 pt-3 pb-3">
+          <h2 className="font-display text-[22px] leading-tight font-semibold">{title}</h2>
           <button
             onClick={onClose}
-            className="grid h-9 w-9 place-items-center rounded-full bg-soft text-muted"
+            className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-soft text-muted"
             aria-label="Close"
           >
-            <Icon name="close" />
+            <Icon name="close" weight="bold" className="h-4 w-4" />
           </button>
         </div>
         <div className="flex-1 overflow-y-auto overscroll-contain px-5">
@@ -76,6 +113,45 @@ export function StickyActions({ children, error }: { children: ReactNode; error?
   );
 }
 
+/* ---------- Screen header ---------- */
+
+export function ScreenHeader({
+  title,
+  subtitle,
+  action,
+  onBack,
+}: {
+  title: string;
+  subtitle?: ReactNode;
+  action?: ReactNode;
+  onBack?: () => void;
+}) {
+  return (
+    <header className="pt-safe sticky top-0 z-20 bg-bg/90 px-5 pb-3 backdrop-blur-xl">
+      {onBack && (
+        <button
+          onClick={onBack}
+          className="-ml-2 mb-1 flex h-9 items-center gap-1 rounded-full pr-3 pl-1 text-sm font-medium text-brand active:bg-soft"
+          aria-label="Back"
+        >
+          <Icon name="left" weight="bold" className="h-4 w-4" /> Today
+        </button>
+      )}
+      <div className="flex items-end justify-between gap-3">
+        <div className="min-w-0">
+          <h1 className="font-display truncate text-[2rem] leading-tight font-bold">{title}</h1>
+          {subtitle && <p className="text-sm text-muted">{subtitle}</p>}
+        </div>
+        {action && <div className="shrink-0 pb-1">{action}</div>}
+      </div>
+    </header>
+  );
+}
+
+/** Small pill button for header actions ("New chat", "New plan"). */
+export const headerActionClass =
+  "h-9 rounded-full bg-card px-4 text-sm font-medium text-ink active:scale-95 disabled:opacity-0";
+
 /* ---------- Buttons & inputs ---------- */
 
 export function Button({
@@ -88,8 +164,8 @@ export function Button({
     <button
       {...props}
       className={cx(
-        "inline-flex h-12 items-center justify-center gap-2 rounded-2xl px-5 font-semibold transition active:scale-[0.98] disabled:opacity-40",
-        variant === "primary" && "bg-ink text-bg",
+        "inline-flex h-12 items-center justify-center gap-2 rounded-full px-5 font-semibold transition active:scale-[0.98] disabled:opacity-40",
+        variant === "primary" && "bg-brand text-on-brand",
         variant === "secondary" && "bg-soft text-ink",
         variant === "ghost" && "text-muted",
         variant === "danger" && "bg-accent/10 text-accent",
@@ -112,7 +188,7 @@ export function Field({ label, children, hint }: { label: string; children: Reac
 }
 
 export const inputClass =
-  "h-12 w-full rounded-xl border border-line bg-card px-3 text-ink outline-none placeholder:text-muted/70 focus:border-ink/40";
+  "h-12 w-full rounded-xl border border-line bg-card px-3 text-ink outline-none placeholder:text-muted/70 focus:border-brand focus:ring-2 focus:ring-brand/20";
 
 export function NumberInput({
   value,
@@ -155,7 +231,7 @@ export function Segmented<T extends string>({
   size?: "sm" | "md";
 }) {
   return (
-    <div className="flex rounded-2xl bg-soft p-1" role="tablist">
+    <div className="flex rounded-full bg-soft p-1" role="tablist">
       {options.map((o) => (
         <button
           key={o.id}
@@ -163,7 +239,7 @@ export function Segmented<T extends string>({
           aria-selected={value === o.id}
           onClick={() => onChange(o.id)}
           className={cx(
-            "flex flex-1 items-center justify-center gap-1.5 rounded-xl font-medium transition",
+            "flex flex-1 items-center justify-center gap-1.5 rounded-full font-medium transition",
             size === "sm" ? "h-8 text-sm" : "h-10 text-[15px]",
             value === o.id ? "bg-card text-ink shadow-sm" : "text-muted",
           )}
@@ -182,7 +258,9 @@ export function Ring({
   max,
   size = 148,
   stroke = 14,
-  color = "var(--accent)",
+  color = "var(--brand)",
+  track = "var(--soft)",
+  overColor = "var(--accent)",
   children,
 }: {
   value: number;
@@ -190,6 +268,8 @@ export function Ring({
   size?: number;
   stroke?: number;
   color?: string;
+  track?: string;
+  overColor?: string;
   children?: ReactNode;
 }) {
   const r = (size - stroke) / 2;
@@ -199,13 +279,13 @@ export function Ring({
   return (
     <div className="relative grid place-items-center" style={{ width: size, height: size }}>
       <svg width={size} height={size} className="-rotate-90">
-        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="var(--soft)" strokeWidth={stroke} />
+        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke={track} strokeWidth={stroke} />
         <circle
           cx={size / 2}
           cy={size / 2}
           r={r}
           fill="none"
-          stroke={over ? "var(--ink)" : color}
+          stroke={over ? overColor : color}
           strokeWidth={stroke}
           strokeLinecap="round"
           strokeDasharray={c}
@@ -218,10 +298,20 @@ export function Ring({
   );
 }
 
-export function Bar({ value, max, color }: { value: number; max: number; color: string }) {
+export function Bar({
+  value,
+  max,
+  color,
+  track = "var(--soft)",
+}: {
+  value: number;
+  max: number;
+  color: string;
+  track?: string;
+}) {
   const pct = max > 0 ? Math.min((value / max) * 100, 100) : 0;
   return (
-    <div className="h-2 w-full overflow-hidden rounded-full bg-soft">
+    <div className="h-1.5 w-full overflow-hidden rounded-full" style={{ background: track }}>
       <div
         className="h-full rounded-full"
         style={{ width: `${pct}%`, background: color, transition: "width 0.5s ease" }}
@@ -239,104 +329,93 @@ export function Spinner({ className }: { className?: string }) {
   );
 }
 
-/* ---------- Icons (inline, no dependency) ---------- */
+/* ---------- Icons (Phosphor) ---------- */
 
-const PATHS: Record<string, ReactNode> = {
-  close: <path d="M6 6l12 12M18 6L6 18" />,
-  plus: <path d="M12 5v14M5 12h14" />,
-  minus: <path d="M5 12h14" />,
-  left: <path d="M15 6l-6 6 6 6" />,
-  right: <path d="M9 6l6 6-6 6" />,
-  settings: (
-    <>
-      <circle cx="12" cy="12" r="3" />
-      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
-    </>
-  ),
-  barcode: <path d="M4 6v12M7 6v12M10 6v12M14 6v12M17 6v12M20 6v12M3 4h3M18 4h3M3 20h3M18 20h3" />,
-  sparkle: <path d="M12 3l1.8 4.9L19 9.7l-4.9 1.8L12 16.4l-1.8-4.9L5.3 9.7l4.9-1.8L12 3zM19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8L19 15z" />,
-  pencil: <path d="M4 20h4L19 9l-4-4L4 16v4zM14 6l4 4" />,
-  clock: (
-    <>
-      <circle cx="12" cy="12" r="9" />
-      <path d="M12 7v5l3 2" />
-    </>
-  ),
-  camera: (
-    <>
-      <path d="M4 8h3l2-3h6l2 3h3v11H4z" />
-      <circle cx="12" cy="13" r="3.5" />
-    </>
-  ),
-  drop: <path d="M12 3c3.5 4.5 6 7.8 6 11a6 6 0 0 1-12 0c0-3.2 2.5-6.5 6-11z" />,
-  trash: <path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13" />,
-  check: <path d="M5 12l5 5 9-10" />,
-  download: <path d="M12 4v11M7 10l5 5 5-5M5 20h14" />,
-  upload: <path d="M12 20V9M7 14l5-5 5 5M5 4h14" />,
-  flame: <path d="M12 3c.5 3.2 4.5 5.4 4.5 10a4.5 4.5 0 0 1-9 0c0-2 .9-3.4 2-4.5.2 1.6 1 2.6 2 3 0-3.2-.8-5.8.5-8.5z" />,
-  scale: (
-    <>
-      <rect x="3" y="4" width="18" height="16" rx="3" />
-      <path d="M8.5 9.5a5 5 0 0 1 7 0M12 9.5l1.5-2" />
-    </>
-  ),
-  plan: (
-    <>
-      <rect x="5" y="4" width="14" height="17" rx="2" />
-      <path d="M9 4V3h6v1M9 10h6M9 14h6M9 18h3" />
-    </>
-  ),
-  chat: <path d="M4 5h16v11H9l-5 4V5z" />,
-  book: <path d="M5 4h10a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3V4zM5 17a3 3 0 0 1 3-3h10M9 8h5" />,
-  send: <path d="M4 12l16-8-6 16-3-7-7-1z" />,
-  activity: <path d="M3 12h4l3-8 4 16 3-8h4" />,
-  refresh: <path d="M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7" />,
-  today: (
-    <>
-      <rect x="4" y="5" width="16" height="15" rx="2" />
-      <path d="M8 3v4M16 3v4M4 10h16" />
-    </>
-  ),
-  search: (
-    <>
-      <circle cx="11" cy="11" r="6.5" />
-      <path d="M20 20l-4.2-4.2" />
-    </>
-  ),
-};
+const ICONS = {
+  close: X,
+  plus: Plus,
+  minus: Minus,
+  left: CaretLeft,
+  right: CaretRight,
+  settings: GearSix,
+  barcode: Barcode,
+  label: Scan,
+  sparkle: Sparkle,
+  pencil: PencilSimple,
+  clock: ClockCounterClockwise,
+  camera: Camera,
+  drop: Drop,
+  trash: Trash,
+  check: Check,
+  download: DownloadSimple,
+  upload: UploadSimple,
+  flame: Fire,
+  scale: Scales,
+  plan: Notepad,
+  chat: ChatCircleDots,
+  book: BookOpenText,
+  send: PaperPlaneTilt,
+  activity: Sneaker,
+  refresh: ArrowClockwise,
+  today: SunHorizon,
+  search: MagnifyingGlass,
+  steps: Footprints,
+  // meals
+  breakfast: Coffee,
+  lunch: BowlFood,
+  dinner: CookingPot,
+  snack: OrangeSlice,
+} satisfies Record<string, PhosphorIcon>;
+
+export type IconName = keyof typeof ICONS;
 
 export function Icon({
   name,
   className,
   style,
+  weight = "regular",
 }: {
-  name: keyof typeof PATHS | string;
+  name: IconName | string;
   className?: string;
   style?: React.CSSProperties;
+  weight?: IconWeight;
 }) {
-  return (
-    <svg
-      style={style}
-      viewBox="0 0 24 24"
-      className={cx("h-5 w-5", className)}
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={2}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden
-    >
-      {PATHS[name]}
-    </svg>
-  );
+  const C = ICONS[name as IconName];
+  if (!C) return null;
+  return <C weight={weight} style={style} className={cx("h-5 w-5 shrink-0", className)} aria-hidden />;
 }
 
 export const MACRO_META = [
-  { key: "protein", label: "Protein", color: "var(--protein)" },
-  { key: "carbs", label: "Carbs", color: "var(--carbs)" },
-  { key: "fat", label: "Fat", color: "var(--fat)" },
-  { key: "fibre", label: "Fibre", color: "var(--fibre)" },
+  { key: "protein", label: "Protein", short: "P", color: "var(--protein)", onHero: "var(--protein-hi)" },
+  { key: "carbs", label: "Carbs", short: "C", color: "var(--carbs)", onHero: "var(--carbs-hi)" },
+  { key: "fat", label: "Fat", short: "F", color: "var(--fat)", onHero: "var(--fat-hi)" },
+  { key: "fibre", label: "Fibre", short: "Fi", color: "var(--fibre)", onHero: "var(--fibre-hi)" },
 ] as const;
+
+/** Compact macro readout: coloured letter + amount, no separators. */
+export function MacroLine({ n, className }: { n: { protein: number; carbs: number; fat: number; fibre: number }; className?: string }) {
+  return (
+    <span className={cx("tabular inline-flex gap-2.5", className)}>
+      {MACRO_META.map((m) => (
+        <span key={m.key} className="whitespace-nowrap">
+          <span className="font-semibold" style={{ color: m.color }}>
+            {m.short}
+          </span>{" "}
+          {Math.round(n[m.key])}
+        </span>
+      ))}
+    </span>
+  );
+}
+
+/** Small card section used across screens. */
+export function Card({ className, children, ...props }: React.HTMLAttributes<HTMLElement>) {
+  return (
+    <section {...props} className={cx("rounded-[1.375rem] bg-card p-5", className)}>
+      {children}
+    </section>
+  );
+}
 
 export function Switch({ checked, onChange, label }: { checked: boolean; onChange: (v: boolean) => void; label: string }) {
   return (
@@ -346,7 +425,7 @@ export function Switch({ checked, onChange, label }: { checked: boolean; onChang
       aria-checked={checked}
       aria-label={label}
       onClick={() => onChange(!checked)}
-      className={cx("relative h-8 w-14 shrink-0 rounded-full transition", checked ? "bg-ink" : "bg-soft")}
+      className={cx("relative h-8 w-14 shrink-0 rounded-full transition", checked ? "bg-brand" : "bg-soft")}
     >
       <span
         className={cx(

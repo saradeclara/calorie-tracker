@@ -42,8 +42,8 @@ export function DeficitCalculator({ onApply }: { onApply: (kcal: number, weightK
   const m = r ? macrosFor(r.target, Number(d.weightKg)) : null;
 
   return (
-    <section className="space-y-3 rounded-3xl bg-card p-5 shadow-sm">
-      <h2 className="font-semibold">Calorie deficit calculator</h2>
+    <section className="space-y-3 rounded-[1.375rem] bg-card p-5">
+      <h2 className="font-display text-lg font-semibold">Calorie deficit calculator</h2>
 
       <Segmented
         size="sm"
@@ -121,7 +121,7 @@ export function DeficitCalculator({ onApply }: { onApply: (kcal: number, weightK
               onClick={() => set("activity", a.value)}
               className={cx(
                 "rounded-xl px-3 py-2 text-left",
-                d.activity === a.value ? "bg-ink text-bg" : "bg-soft text-ink",
+                d.activity === a.value ? "bg-brand text-on-brand" : "bg-soft text-ink",
               )}
             >
               <div className="text-sm font-semibold">{a.label}</div>

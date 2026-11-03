@@ -32,8 +32,8 @@ export function WeightInput({ date, notify, compact }: { date: string; notify: (
     <div>
       <div className="flex items-center gap-2">
         {!compact && (
-          <span className="flex shrink-0 items-center gap-2 font-semibold">
-            <Icon name="scale" className="h-5 w-5 text-[var(--w-line)]" /> Weight
+          <span className="font-display flex shrink-0 items-center gap-2 text-lg font-semibold">
+            <Icon name="scale" weight="fill" className="h-5 w-5 text-[var(--w-line)]" /> Weight
           </span>
         )}
         <div className="min-w-0 flex-1">

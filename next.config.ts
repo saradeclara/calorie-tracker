@@ -6,6 +6,10 @@ const nextConfig: NextConfig = {
     NEXT_PUBLIC_BUILD: `${process.env.VERCEL_GIT_COMMIT_SHA?.slice(0, 7) ?? "local"} · ${new Date().toISOString().slice(0, 16).replace("T", " ")} UTC`,
   },
   cacheComponents: true,
+  experimental: {
+    // Only bundle the icons actually used.
+    optimizePackageImports: ["@phosphor-icons/react"],
+  },
   partialPrefetching: true,
   turbopack: {
     rules: {

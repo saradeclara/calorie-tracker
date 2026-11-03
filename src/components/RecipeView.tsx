@@ -1,4 +1,5 @@
 import type { Recipe } from "@/lib/types";
+import { Icon } from "./ui";
 
 /** Ingredients + numbered steps. */
 export function RecipeView({ recipe }: { recipe: Recipe }) {
@@ -6,7 +7,7 @@ export function RecipeView({ recipe }: { recipe: Recipe }) {
     <div className="space-y-3 text-sm">
       {recipe.ingredients.length > 0 && (
         <div>
-          <h4 className="mb-1 text-xs font-semibold uppercase tracking-wide text-muted">Ingredients</h4>
+          <h4 className="mb-1 font-semibold">Ingredients</h4>
           <ul className="list-disc space-y-0.5 pl-5">
             {recipe.ingredients.map((x, i) => (
               <li key={i}>{x}</li>
@@ -16,7 +17,7 @@ export function RecipeView({ recipe }: { recipe: Recipe }) {
       )}
       {recipe.steps.length > 0 && (
         <div>
-          <h4 className="mb-1 text-xs font-semibold uppercase tracking-wide text-muted">Method</h4>
+          <h4 className="mb-1 font-semibold">Method</h4>
           <ol className="list-decimal space-y-1 pl-5">
             {recipe.steps.map((x, i) => (
               <li key={i}>{x}</li>
@@ -33,8 +34,11 @@ export function RecipeToggle({ recipe, open }: { recipe: Recipe; open?: boolean 
   return (
     <details className="group mt-1.5" open={open}>
       <summary className="cursor-pointer list-none text-xs font-semibold text-ink/80 [&::-webkit-details-marker]:hidden">
-        <span className="group-open:hidden">Show recipe ▾</span>
-        <span className="hidden group-open:inline">Hide recipe ▴</span>
+        <span className="inline-flex items-center gap-1 text-brand">
+          <Icon name="book" className="h-4 w-4" />
+          <span className="group-open:hidden">Show recipe</span>
+          <span className="hidden group-open:inline">Hide recipe</span>
+        </span>
       </summary>
       <div className="mt-2">
         <RecipeView recipe={recipe} />

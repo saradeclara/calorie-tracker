@@ -24,10 +24,10 @@ export function GarminCard({
   if (!data && !error && !loading) return null;
 
   return (
-    <section className="rounded-3xl bg-card p-5 shadow-sm">
+    <section className="rounded-[1.375rem] bg-card p-5">
       <div className="mb-2 flex items-center justify-between">
-        <h3 className="flex items-center gap-2 font-semibold">
-          <Icon name="activity" className="h-5 w-5 text-protein" /> Garmin
+        <h3 className="font-display flex items-center gap-2 text-lg font-semibold">
+          <Icon name="activity" weight="fill" className="h-5 w-5 text-brand" /> Garmin
         </h3>
         <button onClick={onReload} className="grid h-8 w-8 place-items-center rounded-full text-muted active:bg-soft" aria-label="Refresh Garmin">
           {loading ? <Spinner className="h-4 w-4" /> : <Icon name="refresh" className="h-4 w-4" />}
@@ -47,7 +47,7 @@ export function GarminCard({
                   {data.stepGoal ? ` / ${data.stepGoal.toLocaleString("en-GB")}` : ""}
                 </span>
               </div>
-              {data.stepGoal ? <Bar value={data.steps} max={data.stepGoal} color="var(--protein)" /> : null}
+              {data.stepGoal ? <Bar value={data.steps} max={data.stepGoal} color="var(--brand)" /> : null}
             </div>
           )}
 
@@ -76,7 +76,7 @@ export function GarminCard({
             <>
               <div className="mt-1 flex items-baseline justify-between text-sm">
                 <span className="text-muted">Added to your budget</span>
-                <span className="tabular font-semibold text-protein">+{adj.adjustment}</span>
+                <span className="tabular font-semibold text-brand">+{adj.adjustment}</span>
               </div>
               <p className="mt-2 text-xs text-muted">
                 {adj.mode === "garmin" ? (

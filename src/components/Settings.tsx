@@ -3,7 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 import { exportData, getGoals, getSetting, importData, saveGoals, setSetting } from "@/lib/db";
 import { Goals } from "@/lib/types";
-import { Button, Field, Icon, NumberInput, Switch, inputClass } from "./ui";
+import { ThemePicker } from "./ThemePicker";
+import { Button, Field, Icon, NumberInput, ScreenHeader, Switch, inputClass } from "./ui";
 import { DeficitCalculator } from "./DeficitCalculator";
 import { macrosFor } from "@/lib/deficit";
 
@@ -44,16 +45,16 @@ export function Settings({ onBack, notify }: { onBack: () => void; notify: (m: s
 
   return (
     <div className="pb-16">
-      <header className="pt-safe sticky top-0 z-20 flex items-center gap-2 bg-bg/90 px-2 pb-2 backdrop-blur">
-        <button onClick={onBack} className="grid h-10 w-10 place-items-center rounded-full text-muted active:bg-soft" aria-label="Back">
-          <Icon name="left" />
-        </button>
-        <h1 className="text-lg font-semibold">Goals & settings</h1>
-      </header>
+      <ScreenHeader title="Goals & settings" onBack={onBack} />
 
       <div className="space-y-4 px-4">
-        <section className="space-y-3 rounded-3xl bg-card p-5 shadow-sm">
-          <h2 className="font-semibold">Daily goals</h2>
+        <section className="space-y-3 rounded-[1.375rem] bg-card p-5">
+          <h2 className="font-display text-lg font-semibold">Colour</h2>
+          <ThemePicker />
+        </section>
+
+        <section className="space-y-3 rounded-[1.375rem] bg-card p-5">
+          <h2 className="font-display text-lg font-semibold">Daily goals</h2>
           <div className="grid grid-cols-2 gap-3">
             {GOAL_FIELDS.map((f) => (
               <Field key={f.key} label={f.label}>
@@ -105,10 +106,10 @@ export function Settings({ onBack, notify }: { onBack: () => void; notify: (m: s
           }}
         />
 
-        <section className="space-y-2 rounded-3xl bg-card p-5 shadow-sm">
+        <section className="space-y-2 rounded-[1.375rem] bg-card p-5">
           <div className="flex items-center justify-between gap-3">
             <div>
-              <h2 className="font-semibold">Share reflux triggers with AI</h2>
+              <h2 className="font-display text-lg font-semibold">Share reflux triggers with AI</h2>
               <p className="text-xs text-muted">So the coach and meal planner avoid them. Off by default; nothing else about reflux uses AI.</p>
             </div>
             <Switch
@@ -123,8 +124,8 @@ export function Settings({ onBack, notify }: { onBack: () => void; notify: (m: s
           </div>
         </section>
 
-        <section className="space-y-3 rounded-3xl bg-card p-5 shadow-sm">
-          <h2 className="font-semibold">AI passcode</h2>
+        <section className="space-y-3 rounded-[1.375rem] bg-card p-5">
+          <h2 className="font-display text-lg font-semibold">AI passcode</h2>
           <p className="text-sm text-muted">
             The same value as <code className="rounded bg-soft px-1">APP_PASSCODE</code> in Vercel. It stops anyone else who finds
             your URL from using your AI credit.
@@ -149,8 +150,8 @@ export function Settings({ onBack, notify }: { onBack: () => void; notify: (m: s
           </Button>
         </section>
 
-        <section className="space-y-3 rounded-3xl bg-card p-5 shadow-sm">
-          <h2 className="font-semibold">Your data</h2>
+        <section className="space-y-3 rounded-[1.375rem] bg-card p-5">
+          <h2 className="font-display text-lg font-semibold">Your data</h2>
           <p className="text-sm text-muted">
             Everything is stored on this device only. Export a backup now and then, especially before changing phones.
             {persisted === false && " Your browser may clear storage under pressure — installing to the home screen helps."}

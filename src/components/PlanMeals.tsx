@@ -26,7 +26,7 @@ export function PlanMeals({ notify }: { notify: (m: string) => void }) {
   };
 
   return (
-    <section className="space-y-2 rounded-3xl bg-card p-5 shadow-sm">
+    <section className="space-y-2 rounded-[1.375rem] bg-card p-5">
       <div className="flex items-baseline justify-between">
         <h2 className="font-semibold">Meals to include</h2>
         {on.size > 0 && <span className="tabular text-xs text-muted">{Math.round(kcal)} kcal ticked</span>}
@@ -47,7 +47,7 @@ export function PlanMeals({ notify }: { notify: (m: string) => void }) {
                   role="checkbox"
                   aria-checked={checked}
                   onClick={() => setTickedKits(checked ? [...on].filter((x) => x !== k.id) : [...on, k.id!])}
-                  className={cx("flex w-full items-center gap-3 rounded-2xl px-3 py-2.5 text-left", checked ? "bg-ink text-bg" : "bg-soft")}
+                  className={cx("flex w-full items-center gap-3 rounded-2xl px-3 py-2.5 text-left", checked ? "bg-brand text-on-brand" : "bg-soft")}
                 >
                   <span className={cx("grid h-5 w-5 shrink-0 place-items-center rounded-md border-2", checked ? "border-bg bg-bg text-ink" : "border-line")}>
                     {checked && <Icon name="check" className="h-3.5 w-3.5" />}

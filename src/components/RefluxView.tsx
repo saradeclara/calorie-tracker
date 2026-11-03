@@ -2,7 +2,7 @@
 
 import { formatDay, toKey } from "@/lib/dates";
 import type { FoodIndex } from "@/lib/foods";
-import { Icon } from "./ui";
+import { Icon, ScreenHeader } from "./ui";
 import { SEVERITY_COLOR, SeverityChip } from "./Reflux";
 
 /** Read-only list of foods you've flagged as reflux triggers. */
@@ -13,13 +13,11 @@ export function RefluxView({ foods }: { foods: FoodIndex }) {
 
   return (
     <div className="pb-28">
-      <header className="pt-safe sticky top-0 z-20 bg-bg/90 px-4 pb-2 backdrop-blur">
-        <h1 className="py-2 text-center text-lg font-semibold">Reflux triggers</h1>
-      </header>
+      <ScreenHeader title="Reflux triggers" />
 
       <div className="space-y-3 px-4">
         {triggers.length === 0 ? (
-          <div className="rounded-3xl bg-card p-6 text-center shadow-sm">
+          <div className="rounded-[1.375rem] bg-card p-6 text-center">
             <Icon name="flame" className="mx-auto h-8 w-8 text-muted" />
             <p className="mt-3 font-semibold">No triggers yet</p>
             <p className="mt-1 text-sm text-muted">
@@ -29,7 +27,7 @@ export function RefluxView({ foods }: { foods: FoodIndex }) {
           </div>
         ) : (
           <>
-            <ul className="divide-y divide-line overflow-hidden rounded-3xl bg-card shadow-sm">
+            <ul className="divide-y divide-line overflow-hidden rounded-[1.375rem] bg-card">
               {triggers.map((f) => (
                 <li key={f.id} className="flex items-start gap-3 px-5 py-3.5">
                   <span

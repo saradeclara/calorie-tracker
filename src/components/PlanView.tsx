@@ -10,7 +10,7 @@ import { PLAN_KEY, dayLabel, logPlan, planTargets, planTurn, savePlan, sharedTri
 import { PlanMeals } from "./PlanMeals";
 import { useFoodIndex } from "@/lib/useFoods";
 import { MEALS } from "@/lib/types";
-import { Bar, Button, Icon, Segmented, Spinner, cx } from "./ui";
+import { Bar, Button, Icon, ScreenHeader, Segmented, Spinner, cx, headerActionClass } from "./ui";
 import { TriggerWarning } from "./Reflux";
 
 const EXAMPLE =
@@ -92,7 +92,7 @@ export function PlanView({ notify }: { notify: (m: string) => void }) {
       <div className="pb-28">
         <Header />
         <div className="space-y-3 px-4">
-          <section className="space-y-3 rounded-3xl bg-card p-5 shadow-sm">
+          <section className="space-y-3 rounded-[1.375rem] bg-card p-5">
             <Segmented
               size="sm"
               value={day}
@@ -146,7 +146,7 @@ export function PlanView({ notify }: { notify: (m: string) => void }) {
             onClick={() => {
               if (window.confirm("Start a new plan? This one will be cleared.")) savePlan(null);
             }}
-            className="py-2 text-sm font-medium text-muted"
+            className={headerActionClass}
           >
             New plan
           </button>
@@ -155,44 +155,46 @@ export function PlanView({ notify }: { notify: (m: string) => void }) {
       <div className="space-y-3 px-4">
         <p className="px-1 text-sm font-medium text-muted">{dayLabel(stored.date)}</p>
 
-        <section className="space-y-3 rounded-3xl bg-card p-5 shadow-sm">
-          <div className="flex items-baseline justify-between">
-            <span className="tabular text-2xl font-bold">
-              {t.kcal} <span className="text-sm font-normal text-muted">/ {check.max} kcal</span>
+        <section className="space-y-4 rounded-[2rem] bg-hero p-5 text-on-hero" aria-label="Plan totals">
+          <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
+            <span className="tabular whitespace-nowrap">
+              <span className="font-display text-[2.4rem] leading-none font-bold">{t.kcal}</span>{" "}
+              <span className="text-sm text-on-hero-muted">/ {check.max} kcal</span>
             </span>
             {check.within ? (
-              <span className="flex items-center gap-1 text-sm font-medium text-protein">
-                <Icon name="check" className="h-4 w-4" /> Within your deficit
+              <span className="flex items-center gap-1 rounded-full bg-butter px-3 py-1 text-sm font-semibold text-[#3a2c05]">
+                <Icon name="check" weight="bold" className="h-4 w-4" /> Within your deficit
               </span>
             ) : (
-              <span className="text-sm font-medium text-accent">Outside your target</span>
+              <span className="rounded-full bg-[#ffb4a3] px-3 py-1 text-sm font-semibold text-[#4a1206]">Outside your target</span>
             )}
           </div>
           {!check.within && check.problem && (
-            <p className="rounded-xl bg-accent/10 p-3 text-sm text-accent">
+            <p className="rounded-xl bg-white/10 p-3 text-sm">
               {check.problem} Ask for a change below to fix it. Logging is off until it fits.
             </p>
           )}
           <div className="grid grid-cols-2 gap-x-5 gap-y-3">
-            <Macro label="Protein" value={t.protein} target={targets.protein} color="var(--protein)" />
-            <Macro label="Fibre" value={t.fibre} target={targets.fibre} color="var(--fibre)" />
-            <Macro label="Carbs" value={t.carbs} target={targets.carbs} color="var(--carbs)" />
-            <Macro label="Fat" value={t.fat} target={targets.fat} color="var(--fat)" />
+            <Macro label="Protein" value={t.protein} target={targets.protein} color="var(--protein-hi)" />
+            <Macro label="Fibre" value={t.fibre} target={targets.fibre} color="var(--fibre-hi)" />
+            <Macro label="Carbs" value={t.carbs} target={targets.carbs} color="var(--carbs-hi)" />
+            <Macro label="Fat" value={t.fat} target={targets.fat} color="var(--fat-hi)" />
           </div>
         </section>
 
         {plan.meals.map((m, mi) => {
           const kcal = Math.round(m.items.reduce((a, i) => a + i.kcal, 0));
           return (
-            <section key={mi} className="rounded-3xl bg-card p-5 shadow-sm">
-              <div className="flex items-baseline justify-between gap-3">
-                <div>
-                  <div className="text-xs font-medium uppercase tracking-wide text-muted">
-                    {MEALS.find((x) => x.id === m.meal)?.label}
+            <section key={mi} className="rounded-[1.375rem] bg-card p-5">
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex min-w-0 gap-3">
+                  <Icon name={m.meal} weight="duotone" className="mt-0.5 h-6 w-6" />
+                  <div className="min-w-0">
+                    <div className="text-sm text-muted">{MEALS.find((x) => x.id === m.meal)?.label}</div>
+                    <h3 className="font-display text-lg leading-snug font-semibold">{m.title}</h3>
                   </div>
-                  <h3 className="font-semibold leading-snug">{m.title}</h3>
                 </div>
-                <span className="tabular shrink-0 font-semibold">{kcal}</span>
+                <span className="font-display tabular shrink-0 text-lg font-semibold">{kcal}</span>
               </div>
               <ul className="mt-2 space-y-1.5">
                 {m.items.map((i, ii) => {
@@ -202,7 +204,7 @@ export function PlanView({ notify }: { notify: (m: string) => void }) {
                       <div className="flex justify-between gap-3">
                         <span>
                           {i.kitId !== undefined && (
-                            <span className="mr-1.5 rounded-full bg-soft px-1.5 py-0.5 align-middle text-[10px] font-semibold uppercase tracking-wide text-muted">
+                            <span className="mr-1.5 rounded-full bg-brand/15 px-2 py-0.5 align-middle text-[11px] font-semibold text-brand">
                               {i.brand || "Saved"}
                             </span>
                           )}
@@ -257,8 +259,8 @@ export function PlanView({ notify }: { notify: (m: string) => void }) {
             <div key={i} className={cx("flex", c.role === "user" ? "justify-end" : "justify-start")}>
               <p
                 className={cx(
-                  "max-w-[85%] whitespace-pre-wrap rounded-3xl px-4 py-2.5 text-sm",
-                  c.role === "user" ? "rounded-br-lg bg-ink text-bg" : "rounded-bl-lg bg-card shadow-sm",
+                  "max-w-[85%] whitespace-pre-wrap rounded-[1.375rem] px-4 py-2.5 text-sm",
+                  c.role === "user" ? "rounded-br-lg bg-brand text-on-brand" : "rounded-bl-lg bg-card",
                 )}
               >
                 {c.content}
@@ -297,7 +299,7 @@ export function PlanView({ notify }: { notify: (m: string) => void }) {
           <button
             type="submit"
             disabled={!refine.trim() || busy}
-            className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-ink text-bg disabled:opacity-30"
+            className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-brand text-on-brand disabled:opacity-30"
             aria-label="Send"
           >
             {busy ? <Spinner className="h-4 w-4" /> : <Icon name="send" className="h-5 w-5" />}
@@ -310,11 +312,7 @@ export function PlanView({ notify }: { notify: (m: string) => void }) {
 
 function Header({ action }: { action?: React.ReactNode }) {
   return (
-    <header className="pt-safe sticky top-0 z-20 flex items-center justify-between bg-bg/90 px-4 pb-2 backdrop-blur">
-      <span className="w-20" />
-      <h1 className="py-2 text-lg font-semibold">Meal plan</h1>
-      <span className="flex w-20 justify-end">{action}</span>
-    </header>
+    <ScreenHeader title="Meal plan" action={action} />
   );
 }
 
@@ -323,11 +321,11 @@ function Macro({ label, value, target, color }: { label: string; value: number; 
     <div>
       <div className="mb-1 flex items-baseline justify-between text-sm">
         <span className="font-medium">{label}</span>
-        <span className="tabular text-muted">
-          <span className="text-ink">{Math.round(value)}</span>/{target}g
+        <span className="tabular text-on-hero-muted">
+          <span className="font-semibold text-on-hero">{Math.round(value)}</span>/{target}g
         </span>
       </div>
-      <Bar value={value} max={target} color={color} />
+      <Bar value={value} max={target} color={color} track="var(--hero-track)" />
     </div>
   );
 }

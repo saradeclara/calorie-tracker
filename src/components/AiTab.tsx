@@ -77,7 +77,7 @@ export function AiTab({ date, meal, onAdded }: { date: string; meal: Meal; onAdd
                     onClick={() => setPicked((s) => s.map((x, j) => (j === i ? { ...x, on: !x.on } : x)))}
                     className={cx(
                       "mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-md border-2",
-                      p.on ? "border-ink bg-ink text-bg" : "border-line",
+                      p.on ? "border-ink bg-brand text-on-brand" : "border-line",
                     )}
                     aria-label={p.on ? `Exclude ${item.name}` : `Include ${item.name}`}
                   >
@@ -103,7 +103,7 @@ export function AiTab({ date, meal, onAdded }: { date: string; meal: Meal; onAdd
                           onClick={() => setPicked((s) => s.map((x, j) => (j === i ? { on: true, mult: m } : x)))}
                           className={cx(
                             "tabular h-7 shrink-0 rounded-lg px-2 text-xs font-medium",
-                            p.mult === m ? "bg-ink text-bg" : "bg-soft text-muted",
+                            p.mult === m ? "bg-brand text-on-brand" : "bg-soft text-muted",
                           )}
                         >
                           {m}×

@@ -5,7 +5,7 @@ import { useLiveQuery } from "dexie-react-hooks";
 import { db, deleteWeight } from "@/lib/db";
 import { addDays, formatDay, todayKey } from "@/lib/dates";
 import { trendChange, withTrend } from "@/lib/weight";
-import { Icon, Segmented } from "./ui";
+import { Icon, ScreenHeader, Segmented } from "./ui";
 import { WeightChart } from "./WeightChart";
 import { WeightInput } from "./WeightInput";
 
@@ -24,12 +24,23 @@ export function WeightView({ notify }: { notify: (m: string) => void }) {
 
   return (
     <div className="pb-28">
-      <header className="pt-safe sticky top-0 z-20 bg-bg/90 px-4 pb-2 backdrop-blur">
-        <h1 className="py-2 text-center text-lg font-semibold">Weight</h1>
-      </header>
+      <ScreenHeader title="Weight" />
 
-      <div className="space-y-4 px-4">
-        <section className="rounded-3xl bg-card p-5 shadow-sm">
+      <div className="space-y-3 px-4">
+        {latest && (
+          <section className="rounded-[2rem] bg-hero p-5 text-on-hero" aria-label="Weight trend">
+            <div className="text-sm text-on-hero-muted">7-day average</div>
+            <div className="font-display tabular text-[2.8rem] leading-none font-bold">
+              {latest.avg.toFixed(1)}
+              <span className="ml-1 text-lg font-medium text-on-hero-muted">kg</span>
+            </div>
+            <div className="mt-5 grid grid-cols-2 gap-3">
+              <Tile label="This week" value={fmtDelta(week)} unit={week === null ? "" : "kg"} />
+              <Tile label="This month" value={fmtDelta(month)} unit={month === null ? "" : "kg"} />
+            </div>
+          </section>
+        )}
+        <section className="rounded-[1.375rem] bg-card p-5">
           <p className="mb-2 text-sm font-medium text-muted">Today</p>
           <WeightInput date={todayKey()} notify={notify} compact />
         </section>
@@ -41,13 +52,8 @@ export function WeightView({ notify }: { notify: (m: string) => void }) {
           </p>
         ) : (
           <>
-            <div className="grid grid-cols-3 gap-2">
-              <Tile label="7-day average" value={`${latest!.avg.toFixed(1)}`} unit="kg" />
-              <Tile label="This week" value={fmtDelta(week)} unit={week === null ? "" : "kg"} />
-              <Tile label="This month" value={fmtDelta(month)} unit={month === null ? "" : "kg"} />
-            </div>
 
-            <section className="space-y-3 rounded-3xl bg-card p-5 shadow-sm">
+            <section className="space-y-3 rounded-[1.375rem] bg-card p-5">
               <Segmented
                 size="sm"
                 value={range}
@@ -68,7 +74,7 @@ export function WeightView({ notify }: { notify: (m: string) => void }) {
             {/* The table view: every value, readable without hovering */}
             <section>
               <h2 className="mb-2 px-1 text-sm font-semibold text-muted">Weigh-ins</h2>
-              <ul className="divide-y divide-line overflow-hidden rounded-3xl bg-card shadow-sm">
+              <ul className="divide-y divide-line overflow-hidden rounded-[1.375rem] bg-card">
                 {[...points].reverse().map((p) => (
                   <li key={p.date} className="flex items-center gap-3 py-2.5 pr-2 pl-5">
                     <span className="flex-1 text-sm">{formatDay(p.date)}</span>
@@ -100,11 +106,11 @@ function fmtDelta(d: number | null) {
 
 function Tile({ label, value, unit }: { label: string; value: string; unit: string }) {
   return (
-    <div className="rounded-2xl bg-card p-3 shadow-sm">
-      <div className="text-[11px] text-muted">{label}</div>
-      <div className="tabular text-xl font-semibold">
+    <div className="rounded-2xl bg-white/10 px-4 py-3">
+      <div className="text-xs text-on-hero-muted">{label}</div>
+      <div className="font-display tabular text-2xl font-semibold">
         {value}
-        {unit && <span className="ml-0.5 text-xs font-normal text-muted">{unit}</span>}
+        {unit && <span className="ml-0.5 text-sm font-normal text-on-hero-muted">{unit}</span>}
       </div>
     </div>
   );

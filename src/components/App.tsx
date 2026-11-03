@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useLiveQuery } from "dexie-react-hooks";
 import { db, getGoals } from "@/lib/db";
-import { addDays, formatDay, mealForNow, todayKey } from "@/lib/dates";
+import { addDays, formatDay, fromKey, mealForNow, todayKey } from "@/lib/dates";
 import { sum } from "@/lib/nutrition";
 import { DEFAULT_GOALS, FoodEntry, Meal, MEALS } from "@/lib/types";
 import { Icon } from "./ui";
@@ -23,6 +23,9 @@ import { WeightView } from "./WeightView";
 import { CoachView } from "./CoachView";
 import { PlanView } from "./PlanView";
 import { WeightInput } from "./WeightInput";
+
+const longDay = (key: string) =>
+  fromKey(key).toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" });
 
 export function App() {
   const [date, setDate] = useState<string | null>(null);
@@ -90,41 +93,47 @@ export function App() {
         <CoachView notify={notify} />
       ) : (
         <>
-          <header className="pt-safe sticky top-0 z-20 bg-bg/90 px-4 pb-2 backdrop-blur">
-            <div className="flex items-center justify-between">
-              <button
-                className="grid h-10 w-10 place-items-center rounded-full text-muted active:bg-soft"
-                onClick={() => setDate(addDays(date, -1))}
-                aria-label="Previous day"
-              >
-                <Icon name="left" />
+          <header className="pt-safe sticky top-0 z-20 bg-bg/90 px-5 pb-3 backdrop-blur-xl">
+            <div className="flex items-end justify-between gap-3">
+              <button className="min-w-0 text-left" onClick={() => setDate(todayKey())} aria-label="Go to today">
+                <div className="font-display truncate text-[2rem] leading-tight font-bold">{formatDay(date)}</div>
+                <div className="text-sm text-muted">
+                  {longDay(date)}
+                  {date !== todayKey() && <span className="font-medium text-brand"> · back to today</span>}
+                </div>
               </button>
-              <button
-                className="text-center"
-                onClick={() => setDate(todayKey())}
-                aria-label="Go to today"
-              >
-                <div className="text-lg font-semibold">{formatDay(date)}</div>
-                {date !== todayKey() && <div className="text-xs text-muted">Tap for today</div>}
-              </button>
-              <div className="flex items-center">
+              <div className="flex shrink-0 items-center gap-1 pb-1">
                 <button
-                  className="grid h-10 w-10 place-items-center rounded-full text-muted active:bg-soft disabled:opacity-30"
+                  className="grid h-10 w-10 place-items-center rounded-full bg-card text-ink active:scale-95"
+                  onClick={() => setDate(addDays(date, -1))}
+                  aria-label="Previous day"
+                >
+                  <Icon name="left" weight="bold" className="h-4 w-4" />
+                </button>
+                <button
+                  className="grid h-10 w-10 place-items-center rounded-full bg-card text-ink active:scale-95 disabled:opacity-30"
                   onClick={() => setDate(addDays(date, 1))}
                   disabled={date >= addDays(todayKey(), 7)}
                   aria-label="Next day"
                 >
-                  <Icon name="right" />
+                  <Icon name="right" weight="bold" className="h-4 w-4" />
+                </button>
+                <button
+                  className="ml-1 grid h-10 w-10 place-items-center rounded-full bg-card text-ink active:scale-95"
+                  onClick={() => setView("settings")}
+                  aria-label="Goals & settings"
+                >
+                  <Icon name="settings" className="h-5 w-5" />
                 </button>
               </div>
             </div>
           </header>
 
-          <main className="space-y-3 px-4 pb-44">
+          <main className="space-y-3 px-4 pb-40">
             <InstallHint />
             <Summary totals={totals} goals={goals} bonus={adj?.adjustment ?? 0} />
             <WaterCard date={date} totalMl={waterMl} goalMl={goals.waterMl} logs={water ?? []} />
-            <section className="rounded-3xl bg-card p-5 shadow-sm">
+            <section className="rounded-[1.375rem] bg-card p-5">
               <WeightInput date={date} notify={notify} />
             </section>
             <GarminCard
@@ -146,21 +155,15 @@ export function App() {
                 foods={foods}
               />
             ))}
-
-            <button
-              onClick={() => setView("settings")}
-              className="mx-auto flex items-center gap-2 py-4 text-sm text-muted"
-            >
-              <Icon name="settings" className="h-4 w-4" /> Goals & settings
-            </button>
           </main>
 
-          <div className="pointer-events-none fixed inset-x-0 bottom-[calc(4rem+env(safe-area-inset-bottom))] z-30 flex justify-center">
+          <div className="pointer-events-none fixed inset-x-0 bottom-[calc(4rem+env(safe-area-inset-bottom))] z-30 mx-auto flex max-w-lg justify-end px-4">
             <button
               onClick={() => setAdding(date === todayKey() ? mealForNow() : "snack")}
-              className="pointer-events-auto mb-3 flex h-14 items-center gap-2 rounded-full bg-ink px-7 font-semibold text-bg shadow-xl shadow-black/20 active:scale-95"
+              className="pointer-events-auto mb-3 grid h-16 w-16 place-items-center rounded-full bg-brand text-on-brand shadow-lg shadow-black/25 active:scale-95"
+              aria-label="Add food"
             >
-              <Icon name="plus" /> Add food
+              <Icon name="plus" weight="bold" className="h-7 w-7" />
             </button>
           </div>
         </>

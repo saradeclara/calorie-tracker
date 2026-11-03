@@ -9,7 +9,7 @@ import { useGarminDay } from "@/lib/garmin";
 import { mealForNow, todayKey } from "@/lib/dates";
 import { useFoodIndex } from "@/lib/useFoods";
 import { MEALS } from "@/lib/types";
-import { Icon, Spinner, cx } from "./ui";
+import { Icon, MacroLine, ScreenHeader, Spinner, cx, headerActionClass } from "./ui";
 import { Markdownish } from "./Markdownish";
 import { TriggerWarning } from "./Reflux";
 
@@ -101,22 +101,19 @@ export function CoachView({ notify }: { notify: (m: string) => void }) {
 
   return (
     <div className="pb-[calc(9.5rem+env(safe-area-inset-bottom))]">
-      <header className="pt-safe sticky top-0 z-20 flex items-center justify-between bg-bg/90 px-4 pb-2 backdrop-blur">
-        <span className="w-20" />
-        <h1 className="py-2 text-lg font-semibold">Coach</h1>
-        <button
-          onClick={newChat}
-          disabled={list.length === 0}
-          className="w-20 py-2 text-right text-sm font-medium text-muted disabled:opacity-0"
-        >
-          New chat
-        </button>
-      </header>
+      <ScreenHeader
+        title="Coach"
+        action={
+          <button onClick={newChat} disabled={list.length === 0} className={headerActionClass}>
+            New chat
+          </button>
+        }
+      />
 
       <div className="space-y-3 px-4">
         {list.length === 0 && streaming === null && (
           <div className="space-y-4 pt-4">
-            <div className="rounded-3xl bg-card p-5 text-sm shadow-sm">
+            <div className="rounded-[1.375rem] bg-card p-5 text-sm">
               <p className="font-semibold">Your nutrition & fitness coach</p>
               <p className="mt-1 text-muted">
                 Ask about today&apos;s food, your activity, snack ideas or your weight trend. It sees today&apos;s log, goals,
@@ -192,7 +189,7 @@ export function CoachView({ notify }: { notify: (m: string) => void }) {
             <button
               type="submit"
               disabled={!draft.trim()}
-              className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-ink text-bg disabled:opacity-30"
+              className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-brand text-on-brand disabled:opacity-30"
               aria-label="Send"
             >
               <Icon name="send" className="h-5 w-5" />
@@ -222,8 +219,8 @@ function Bubble({
     <div className={cx("flex flex-col", role === "user" ? "items-end" : "items-start")}>
       <div
         className={cx(
-          "max-w-[85%] rounded-3xl px-4 py-3 text-[15px] leading-relaxed",
-          role === "user" ? "rounded-br-lg bg-ink text-bg" : "rounded-bl-lg bg-card shadow-sm",
+          "max-w-[85%] rounded-[1.375rem] px-4 py-3 text-[15px] leading-relaxed",
+          role === "user" ? "rounded-br-lg bg-brand text-on-brand" : "rounded-bl-lg bg-card",
         )}
       >
         {role === "assistant" ? <Markdownish text={display} /> : <p className="whitespace-pre-wrap">{display}</p>}
@@ -244,12 +241,13 @@ function SuggestionCard({ s, done, onLog }: { s: Suggestion; done: boolean; onLo
   // App-side name match only (no AI): same warning as everywhere else.
   const trig = foods.triggers.find((t) => t.name.trim().toLowerCase() === s.name.trim().toLowerCase());
   return (
-    <li className="flex items-start gap-3 rounded-2xl border border-line bg-card px-3 py-2.5">
+    <li className="flex items-start gap-3 rounded-[1.375rem] bg-card px-4 py-3">
       <div className="min-w-0 flex-1">
         <div className="text-sm font-medium leading-snug">{s.name}</div>
-        <div className="tabular mt-0.5 text-xs text-muted">
-          {s.portion && `${s.portion} · `}
-          {`${s.kcal}\u00a0kcal · P\u00a0${s.protein} · C\u00a0${s.carbs} · F\u00a0${s.fat}`}
+        <div className="mt-0.5 flex flex-wrap gap-x-2.5 text-xs text-muted">
+          {s.portion && <span>{s.portion}</span>}
+          <span className="tabular font-semibold text-ink">{s.kcal} kcal</span>
+          <MacroLine n={s} />
         </div>
         {trig && <TriggerWarning food={trig} compact />}
         {s.recipe && <RecipeToggle recipe={s.recipe} />}
@@ -259,7 +257,7 @@ function SuggestionCard({ s, done, onLog }: { s: Suggestion; done: boolean; onLo
         disabled={done}
         className={cx(
           "flex h-9 shrink-0 items-center gap-1 rounded-full px-3 text-sm font-semibold",
-          done ? "bg-soft text-muted" : "bg-ink text-bg active:scale-95",
+          done ? "bg-soft text-muted" : "bg-brand text-on-brand active:scale-95",
         )}
         aria-label={done ? `${s.name} logged` : `Log ${s.name}`}
       >

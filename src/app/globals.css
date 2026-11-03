@@ -1,18 +1,42 @@
 @import "tailwindcss";
 
 :root {
-  --bg: #f6f3ee;
+  /* paper & ink: cool, faintly green neutrals */
+  --bg: #f1f3ee;
   --card: #ffffff;
-  --ink: #1d1b18;
-  --muted: #77716a;
-  --line: #e8e2d9;
-  --soft: #efeae2;
-  --accent: #e4572e;
-  --protein: #2a9d8f;
-  --carbs: #e09a2c;
-  --fat: #9c5fb5;
-  --fibre: #5a9e4b;
-  --water: #3a86d1;
+  --ink: #17201b;
+  --muted: #66706a;
+  --line: #e0e5dd;
+  --soft: #e7ebe4;
+
+  /* the one bold thing: the day's hero block (stays deep in both modes) */
+  --hero: #1f5c42;
+  --hero-deep: #174633;
+  --on-hero: #f4f6ee;
+  --on-hero-muted: #b8cbbf;
+  --hero-track: rgb(255 255 255 / 0.14);
+  --butter: #f2c14e;
+
+  /* buttons & active states */
+  --brand: #1f5c42;
+  --on-brand: #f4f6ee;
+
+  /* errors, over budget, delete */
+  --accent: #d6452c;
+
+  /* macros: one set, used everywhere */
+  --protein: #c43d6f;
+  --carbs: #9c680c;
+  --fat: #7d55b8;
+  --fibre: #2b7d40;
+  --water: #2a72b6;
+
+  /* macro tints that read on the deep hero block */
+  --protein-hi: #ff8db3;
+  --carbs-hi: #ffd166;
+  --fat-hi: #c9a7ff;
+  --fibre-hi: #8fe0a0;
+
   --mild: #c99a06;
   --moderate: #e07a1f;
   --severe: #d1342b;
@@ -23,24 +47,52 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: #141311;
-    --card: #1e1c1a;
-    --ink: #f1ede6;
-    --muted: #9a938a;
-    --line: #2e2b27;
-    --soft: #282522;
-    --accent: #f06a42;
-    --protein: #3bb5a6;
-    --carbs: #f0ac44;
-    --fat: #b57ccc;
-    --fibre: #71b862;
-    --water: #5a9fe6;
+    --bg: #0f1311;
+    --card: #191e1b;
+    --ink: #edf1ea;
+    --muted: #94a098;
+    --line: #29302b;
+    --soft: #222925;
+    --hero: #1d5a40;
+    --hero-deep: #164531;
+    --brand: #8fd6ad;
+    --on-brand: #0d2619;
+    --accent: #f0664c;
+    --protein: #ef6f9b;
+    --carbs: #f0b43f;
+    --fat: #ab88e6;
+    --fibre: #66c27a;
+    --water: #5aa5ea;
     --mild: #e3b52a;
     --moderate: #f09245;
     --severe: #f05a50;
     /* validated against the dark card surface */
     --w-dot: #2fa596;
     --w-line: #a26bbf;
+  }
+}
+
+/* Alternative heroes, for trying on (data-theme on <html>). */
+:root[data-theme="aubergine"] {
+  --hero: #43295e;
+  --hero-deep: #341f4a;
+  --on-hero-muted: #cbb8de;
+  --brand: #43295e;
+}
+:root[data-theme="blueberry"] {
+  --hero: #213a63;
+  --hero-deep: #192d4e;
+  --on-hero-muted: #b6c6e0;
+  --brand: #213a63;
+}
+@media (prefers-color-scheme: dark) {
+  :root[data-theme="aubergine"] {
+    --brand: #cdb3f0;
+    --on-brand: #26173a;
+  }
+  :root[data-theme="blueberry"] {
+    --brand: #a9c6f2;
+    --on-brand: #13243f;
   }
 }
 
@@ -52,12 +104,27 @@
   --color-line: var(--line);
   --color-soft: var(--soft);
   --color-accent: var(--accent);
+  --color-hero: var(--hero);
+  --color-hero-deep: var(--hero-deep);
+  --color-on-hero: var(--on-hero);
+  --color-on-hero-muted: var(--on-hero-muted);
+  --color-butter: var(--butter);
+  --color-brand: var(--brand);
+  --color-on-brand: var(--on-brand);
   --color-protein: var(--protein);
   --color-carbs: var(--carbs);
   --color-fat: var(--fat);
   --color-fibre: var(--fibre);
   --color-water: var(--water);
   --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-display: var(--font-bricolage), -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+/* Display face for titles and the numbers that matter */
+.font-display {
+  font-family: var(--font-display);
+  font-optical-sizing: auto;
+  letter-spacing: -0.01em;
 }
 
 html {

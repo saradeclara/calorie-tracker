@@ -87,7 +87,7 @@ export function LabelCamera({ onCapture }: { onCapture: (dataUrl: string) => voi
         onClick={capture}
         disabled={status !== "ready"}
         aria-label="Capture"
-        className="mx-auto grid h-16 w-16 place-items-center rounded-full border-4 border-ink/20 bg-ink text-bg disabled:opacity-30"
+        className="mx-auto grid h-16 w-16 place-items-center rounded-full border-4 border-brand/20 bg-brand text-on-brand disabled:opacity-30"
       >
         <span className="h-11 w-11 rounded-full border-2 border-bg" />
       </button>

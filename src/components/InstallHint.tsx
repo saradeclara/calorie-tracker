@@ -25,10 +25,11 @@ export function InstallHint() {
 
   if (!show) return null;
   return (
-    <div className="flex items-start gap-3 rounded-3xl bg-ink p-4 text-bg">
+    <div className="flex items-start gap-3 rounded-[1.375rem] border border-brand/30 bg-card p-4">
+      <Icon name="download" className="mt-0.5 h-5 w-5 text-brand" />
       <div className="flex-1 text-sm">
         <p className="font-semibold">Install on your home screen</p>
-        <p className="mt-0.5 opacity-80">
+        <p className="mt-0.5 text-muted">
           {ios
             ? "Tap the Share button in Safari, then “Add to Home Screen”."
             : "Open your browser menu and choose “Install app” or “Add to Home screen”."}{" "}
@@ -40,7 +41,7 @@ export function InstallHint() {
           setShow(false);
           setSetting("installHintDismissed", true);
         }}
-        className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-bg/15"
+        className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-soft text-muted"
         aria-label="Dismiss"
       >
         <Icon name="close" className="h-4 w-4" />

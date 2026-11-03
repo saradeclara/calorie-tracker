@@ -44,7 +44,7 @@ export function RecentTab({ date, meal, onAdded }: { date: string; meal: Meal; o
                 <div className="flex items-center gap-1.5">
                   <span className="truncate font-medium">{f.name}</span>
                   {f.kind === "recipe" && (
-                    <span className="shrink-0 rounded-full bg-soft px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted">Saved</span>
+                    <span className="shrink-0 rounded-full bg-brand/15 px-2 py-0.5 text-[11px] font-semibold text-brand">Saved</span>
                   )}
                 </div>
                 <div className="truncate text-xs text-muted">{[f.brand, f.portion].filter(Boolean).join(" · ") || "—"}</div>
