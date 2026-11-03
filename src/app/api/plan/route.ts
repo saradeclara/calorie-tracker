@@ -30,7 +30,7 @@ Daily targets: protein ${t.protein} g, carbs ${t.carbs} g, fat ${t.fat} g, fibre
 The day: ${dayLabel}.
 - Breakfast, lunch, dinner and usually one snack (use the "snack" meal for any snacks), unless they ask otherwise.
 - Use the ingredients and preferences they mention. Realistic UK supermarket foods, home-cookable, with specific portions in grams/ml or household measures.
-- Each meal: a short title, a one or two sentence method, and its components as separate items with portion and nutrition for that portion (kcal, protein, carbs, fat, fibre in g; UK/AOAC fibre). Be accurate; use standard nutrition values.
+- Each meal: a short title, a method (2 to 5 short sentences in order, enough to cook it from; one sentence is fine for no-cook meals), and its components as separate items with portion and nutrition for that portion (kcal, protein, carbs, fat, fibre in g; UK/AOAC fibre). Be accurate; use standard nutrition values.
 - Never below ${t.floor} kcal, no crash-diet tactics, no skipped meals as a strategy.${
     triggers.length
       ? `\n- Avoid these foods, which give them reflux: ${triggers.join("; ")}.`

@@ -56,6 +56,9 @@ type FoodFields = Pick<
   "name" | "brand" | "barcode" | "portion" | "source" | "recipe" | "kcal" | "protein" | "carbs" | "fat" | "fibre"
 >;
 
+/** A food keeps its own recipe, not the recipe of a planned meal it was part of. */
+const ownRecipe = (item: Pick<FoodEntry, "recipe">) => (item.recipe && !item.recipe.partOf ? item.recipe : undefined);
+
 async function findFoodIn(foods: FoodsTable, item: Pick<FoodEntry, "name" | "brand" | "barcode">) {
   if (item.barcode) {
     const hit = await foods.where("barcode").equals(item.barcode).first();
@@ -91,7 +94,7 @@ async function upsertFood(foods: FoodsTable, item: FoodFields, at: number, used:
         : {}),
       barcode: existing.barcode ?? item.barcode,
       // Logging the same food without a recipe (e.g. from an estimate) doesn't wipe a saved one.
-      recipe: item.recipe ?? existing.recipe,
+      recipe: ownRecipe(item) ?? existing.recipe,
       useCount: existing.useCount + (used ? 1 : 0),
       lastUsed: Math.max(existing.lastUsed, at),
     });
@@ -100,7 +103,7 @@ async function upsertFood(foods: FoodsTable, item: FoodFields, at: number, used:
   return (await foods.add({
     ...latest,
     barcode: item.barcode,
-    recipe: item.recipe,
+    recipe: ownRecipe(item),
     useCount: 1,
     lastUsed: at,
     trigger: false,

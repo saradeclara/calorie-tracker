@@ -1,7 +1,7 @@
 import { db, getGoals, getSetting, logEntries, setSetting } from "./db";
 import { fromKey, todayKey, addDays } from "./dates";
 import type { PlanResponse } from "./api";
-import type { MealPlan, PlanKit, PlanTargets } from "./plan";
+import { mealRecipe, type MealPlan, type PlanKit, type PlanTargets } from "./plan";
 import type { Profile } from "./deficit";
 
 export interface PlanTurn {
@@ -55,8 +55,9 @@ export function savePlan(p: StoredPlan | null) {
 /** Add every planned item to that day's log. */
 export async function logPlan(p: StoredPlan) {
   await logEntries(
-    p.plan.meals.flatMap((m) =>
-      m.items.map((i) => ({
+    p.plan.meals.flatMap((m) => {
+      const recipe = mealRecipe(m);
+      return m.items.map((i) => ({
         name: i.name,
         brand: i.brand, // kit items link back to the saved recipe
         portion: i.portion,
@@ -68,8 +69,9 @@ export async function logPlan(p: StoredPlan) {
         source: "ai" as const,
         date: p.date,
         meal: m.meal,
-      })),
-    ),
+        recipe,
+      }));
+    }),
   );
   await savePlan({ ...p, loggedAt: Date.now() });
 }

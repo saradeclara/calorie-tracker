@@ -22,6 +22,11 @@ export type EntrySource = "barcode" | "ai" | "manual";
 export interface Recipe {
   ingredients: string[];
   steps: string[];
+  /**
+   * Set when this is a planned meal's recipe shared by all its components (e.g. "Basa with
+   * new potatoes"). Kept on the logged entries only, not on each component's food record.
+   */
+  partOf?: string;
 }
 
 export interface FoodEntry extends Nutrients {

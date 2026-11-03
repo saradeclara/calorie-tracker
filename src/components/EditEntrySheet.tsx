@@ -39,6 +39,11 @@ export function EditEntrySheet({
         {entry.brand && <p className="text-sm text-muted">{entry.brand}</p>}
         {entry.recipe && (
           <section aria-label="Recipe" className="rounded-2xl bg-soft p-4">
+            {entry.recipe.partOf && (
+              <p className="mb-3 text-sm">
+                Part of <span className="font-semibold">{entry.recipe.partOf}</span>
+              </p>
+            )}
             <RecipeView recipe={entry.recipe} />
           </section>
         )}

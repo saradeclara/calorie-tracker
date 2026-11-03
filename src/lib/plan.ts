@@ -1,4 +1,4 @@
-import type { Meal, Nutrients } from "./types";
+import type { Meal, Nutrients, Recipe } from "./types";
 
 export interface PlanItem extends Nutrients {
   name: string;
@@ -27,6 +27,25 @@ export interface PlanMeal {
 export interface MealPlan {
   meals: PlanMeal[];
   notes?: string;
+}
+
+/** Split a method paragraph into steps (one per sentence). */
+export function methodSteps(method?: string): string[] {
+  return (method ?? "")
+    .split(/(?<=[.!?])\s+(?=[A-Z0-9])|\n+/)
+    .map((s) => s.trim())
+    .filter(Boolean);
+}
+
+/** The recipe a planned meal's logged entries carry: its components + method. */
+export function mealRecipe(m: PlanMeal): Recipe | undefined {
+  const steps = methodSteps(m.method);
+  if (m.items.length < 2 && !steps.length) return undefined;
+  return {
+    partOf: m.title || undefined,
+    ingredients: m.items.map((i) => (i.portion ? `${i.name} (${i.portion})` : i.name)),
+    steps,
+  };
 }
 
 export interface PlanTargets extends Nutrients {
@@ -78,7 +97,7 @@ export function normalisePlan(raw: any): MealPlan {
     .map((m: any) => ({
       meal: (MEAL_ORDER.includes(m?.meal) ? m.meal : "snack") as Meal,
       title: str(m?.title, 100) || "Meal",
-      method: str(m?.method, 400) || undefined,
+      method: str(m?.method, 800) || undefined,
       items: (Array.isArray(m?.items) ? m.items : [])
         .filter((i: any) => str(i?.name, 100))
         .slice(0, 12)

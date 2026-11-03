@@ -5,7 +5,7 @@ import { useLiveQuery } from "dexie-react-hooks";
 import { db } from "@/lib/db";
 import { requestPlan } from "@/lib/api";
 import { addDays, todayKey } from "@/lib/dates";
-import { calorieWindow, type PlanTargets } from "@/lib/plan";
+import { calorieWindow, methodSteps, type PlanTargets } from "@/lib/plan";
 import { PLAN_KEY, dayLabel, logPlan, planTargets, planTurn, savePlan, sharedTriggers, tickedKits, type StoredPlan } from "@/lib/planner";
 import { PlanMeals } from "./PlanMeals";
 import { useFoodIndex } from "@/lib/useFoods";
@@ -216,7 +216,15 @@ export function PlanView({ notify }: { notify: (m: string) => void }) {
                   );
                 })}
               </ul>
-              {m.method && <p className="mt-2 text-sm text-muted">{m.method}</p>}
+              {methodSteps(m.method).length > 1 ? (
+                <ol className="mt-2 list-decimal space-y-0.5 pl-5 text-sm text-muted">
+                  {methodSteps(m.method).map((s, si) => (
+                    <li key={si}>{s}</li>
+                  ))}
+                </ol>
+              ) : (
+                m.method && <p className="mt-2 text-sm text-muted">{m.method}</p>
+              )}
             </section>
           );
         })}
