@@ -4,7 +4,7 @@ import { Profile, calculate } from "./deficit";
 import { adjustmentFor } from "./garmin";
 import { sum } from "./nutrition";
 import { withTrend } from "./weight";
-import { MEALS, severityLabel, type GarminBurn, type GarminDay, type Nutrients } from "./types";
+import { MEALS, severityLabel, type GarminBurn, type GarminDay, type Nutrients, type Recipe } from "./types";
 
 export type ChatMessage = { role: "user" | "assistant"; content: string; at: number };
 
@@ -99,6 +99,21 @@ export async function buildCoachContext(garmin?: GarminDay | null): Promise<stri
 export interface Suggestion extends Nutrients {
   name: string;
   portion?: string;
+  recipe?: Recipe;
+}
+
+const lines = (v: unknown, max: number, len: number) =>
+  Array.isArray(v)
+    ? v
+        .filter((x): x is string => typeof x === "string" && !!x.trim())
+        .map((x) => x.trim().slice(0, len))
+        .slice(0, max)
+    : [];
+
+/** Ingredients/steps from the model, or undefined when there are none. */
+export function toRecipe(ingredients: unknown, steps: unknown): Recipe | undefined {
+  const r = { ingredients: lines(ingredients, 20, 120), steps: lines(steps, 12, 300) };
+  return r.ingredients.length || r.steps.length ? r : undefined;
 }
 
 const num = (v: unknown, dp = 1) => {
@@ -129,6 +144,7 @@ export function parseReply(text: string): { display: string; suggestions: Sugges
         carbs: num(x.carbs),
         fat: num(x.fat),
         fibre: num(x.fibre),
+        recipe: toRecipe(x.ingredients, x.steps),
       }));
     return { display, suggestions };
   } catch {

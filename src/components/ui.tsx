@@ -287,6 +287,7 @@ const PATHS: Record<string, ReactNode> = {
     </>
   ),
   chat: <path d="M4 5h16v11H9l-5 4V5z" />,
+  book: <path d="M5 4h10a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3V4zM5 17a3 3 0 0 1 3-3h10M9 8h5" />,
   send: <path d="M4 12l16-8-6 16-3-7-7-1z" />,
   activity: <path d="M3 12h4l3-8 4 16 3-8h4" />,
   refresh: <path d="M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7" />,

@@ -18,6 +18,12 @@ export interface Nutrients {
 
 export type EntrySource = "barcode" | "ai" | "manual";
 
+/** How to make something (from coach suggestions and meal ideas). */
+export interface Recipe {
+  ingredients: string[];
+  steps: string[];
+}
+
 export interface FoodEntry extends Nutrients {
   id?: number;
   /** Link to the food database record (set automatically on save). */
@@ -31,6 +37,8 @@ export interface FoodEntry extends Nutrients {
   portion?: string;
   source: EntrySource;
   barcode?: string;
+  /** Ingredients and method, when it came from a coach suggestion or meal idea. */
+  recipe?: Recipe;
   createdAt: number;
 }
 
@@ -112,6 +120,8 @@ export interface Food extends Nutrients {
    * exact numbers from its pack/card. These can be ticked into meal plans.
    */
   kind?: "recipe";
+  /** Ingredients and method, kept so re-logging from Recent keeps them. */
+  recipe?: Recipe;
 }
 
 /** Reflux reactions (no longer used by the UI; the table is kept so older data stays valid). */

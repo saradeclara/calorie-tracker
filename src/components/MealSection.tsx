@@ -50,6 +50,11 @@ export function MealSection({
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-1.5">
                     <span className="truncate font-medium">{e.name}</span>
+                    {e.recipe && (
+                      <span title="Has recipe" aria-label="Has recipe" role="img" className="shrink-0 text-muted">
+                        <Icon name="book" className="h-3.5 w-3.5" />
+                      </span>
+                    )}
                     {(() => {
                       const f = e.foodId !== undefined ? foods.byId.get(e.foodId) : undefined;
                       return f?.trigger ? <TriggerDot food={f} /> : null;

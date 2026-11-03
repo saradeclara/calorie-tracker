@@ -25,7 +25,8 @@ Reflux:
 
 Loggable suggestions:
 - When you suggest specific foods, meals or snacks they could eat, end your reply with a <log> block so the app can show a "Log this" button for each. One entry per suggestion as it would be eaten (a whole snack or meal is one entry), with your best estimate for that portion:
-<log>[{"name":"Greek yoghurt with berries","portion":"170 g yoghurt + 80 g berries","kcal":150,"protein":17,"carbs":14,"fat":2,"fibre":2}]</log>
+<log>[{"name":"Greek yoghurt with berries","portion":"1 bowl","kcal":150,"protein":17,"carbs":14,"fat":2,"fibre":2,"ingredients":["170 g 0% Greek yoghurt","80 g frozen mixed berries"],"steps":["Defrost the berries for a minute in the microwave.","Spoon over the yoghurt."]}]</log>
+- "ingredients" (with amounts) and "steps" (short, in order) are saved with the food so they can make it again: include them whenever it's more than one ready-to-eat item, matching what you described in your text. Leave both out for a single item (e.g. an apple, a protein bar).
 - Valid JSON, numbers only (no units), at most 4 entries, nothing after the block. Don't mention the block in your text.
 - No block when you aren't suggesting something specific to eat.`;
 
@@ -60,7 +61,7 @@ export async function POST(request: Request) {
   const encoder = new TextEncoder();
   const stream = anthropic().messages.stream({
     model: MODEL,
-    max_tokens: 2048,
+    max_tokens: 3072,
     ...quickThinking(),
     system: SYSTEM,
     messages: history,

@@ -6,6 +6,7 @@ import { FoodEntry, MEALS, Meal } from "@/lib/types";
 import { Button, Icon, Segmented, Sheet } from "./ui";
 import { EntryForm } from "./EntryForm";
 import { RefluxSection } from "./RefluxSection";
+import { RecipeView } from "./RecipeView";
 
 export function EditEntrySheet({
   entry,
@@ -36,6 +37,11 @@ export function EditEntrySheet({
         <Segmented size="sm" value={meal} onChange={setMeal} options={MEALS.map((m) => ({ id: m.id, label: m.label }))} />
         <RefluxSection entry={entry} notify={notify} />
         {entry.brand && <p className="text-sm text-muted">{entry.brand}</p>}
+        {entry.recipe && (
+          <section aria-label="Recipe" className="rounded-2xl bg-soft p-4">
+            <RecipeView recipe={entry.recipe} />
+          </section>
+        )}
         <EntryForm
           initial={entry}
           submitLabel="Save"

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { suggestMeals } from "@/lib/api";
 import { logEntry } from "@/lib/db";
+import { toRecipe } from "@/lib/coach";
 import { MealIdea, Meal } from "@/lib/types";
 import { Button, Icon, Spinner } from "./ui";
 
@@ -49,6 +50,7 @@ export function IdeasPanel({ date, meal, onAdded }: { date: string; meal: Meal; 
         carbs: idea.carbs,
         fat: idea.fat,
         fibre: idea.fibre,
+        recipe: toRecipe(idea.ingredients, idea.method ? [idea.method] : []),
         source: "ai",
         date,
         meal,

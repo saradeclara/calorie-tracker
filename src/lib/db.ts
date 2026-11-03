@@ -53,7 +53,7 @@ type EntriesTable = EntityTable<FoodEntry, "id">;
 
 type FoodFields = Pick<
   FoodEntry,
-  "name" | "brand" | "barcode" | "portion" | "source" | "kcal" | "protein" | "carbs" | "fat" | "fibre"
+  "name" | "brand" | "barcode" | "portion" | "source" | "recipe" | "kcal" | "protein" | "carbs" | "fat" | "fibre"
 >;
 
 async function findFoodIn(foods: FoodsTable, item: Pick<FoodEntry, "name" | "brand" | "barcode">) {
@@ -90,6 +90,8 @@ async function upsertFood(foods: FoodsTable, item: FoodFields, at: number, used:
         ? { kcal: existing.kcal, protein: existing.protein, carbs: existing.carbs, fat: existing.fat, fibre: existing.fibre }
         : {}),
       barcode: existing.barcode ?? item.barcode,
+      // Logging the same food without a recipe (e.g. from an estimate) doesn't wipe a saved one.
+      recipe: item.recipe ?? existing.recipe,
       useCount: existing.useCount + (used ? 1 : 0),
       lastUsed: Math.max(existing.lastUsed, at),
     });
@@ -98,6 +100,7 @@ async function upsertFood(foods: FoodsTable, item: FoodFields, at: number, used:
   return (await foods.add({
     ...latest,
     barcode: item.barcode,
+    recipe: item.recipe,
     useCount: 1,
     lastUsed: at,
     trigger: false,
@@ -154,14 +157,14 @@ export function logEntry(item: NewEntry) {
 
 /** Copy a past entry into a new day/meal. */
 export function relog(entry: FoodEntry, date: string, meal: FoodEntry["meal"]) {
-  const { name, brand, portion, source, barcode, kcal, protein, carbs, fat, fibre } = entry;
-  return logEntry({ name, brand, portion, source, barcode, kcal, protein, carbs, fat, fibre, date, meal });
+  const { name, brand, portion, source, barcode, recipe, kcal, protein, carbs, fat, fibre } = entry;
+  return logEntry({ name, brand, portion, source, barcode, recipe, kcal, protein, carbs, fat, fibre, date, meal });
 }
 
 /** Log a food from the database with its latest portion. */
 export function relogFood(food: Food, date: string, meal: FoodEntry["meal"]) {
-  const { name, brand, portion, source, barcode, kcal, protein, carbs, fat, fibre } = food;
-  return logEntry({ name, brand, portion, source, barcode, kcal, protein, carbs, fat, fibre, date, meal });
+  const { name, brand, portion, source, barcode, recipe, kcal, protein, carbs, fat, fibre } = food;
+  return logEntry({ name, brand, portion, source, barcode, recipe, kcal, protein, carbs, fat, fibre, date, meal });
 }
 
 /** Edit an entry. The food record takes the new values; a rename re-links to that food. */

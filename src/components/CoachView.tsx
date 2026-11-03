@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useLiveQuery } from "dexie-react-hooks";
 import { db, logEntry, setSetting } from "@/lib/db";
+import { RecipeToggle } from "./RecipeView";
 import { askCoach, buildCoachContext, chatMessage, parseReply, type ChatMessage, type Suggestion } from "@/lib/coach";
 import { useGarminDay } from "@/lib/garmin";
 import { mealForNow, todayKey } from "@/lib/dates";
@@ -243,7 +244,7 @@ function SuggestionCard({ s, done, onLog }: { s: Suggestion; done: boolean; onLo
   // App-side name match only (no AI): same warning as everywhere else.
   const trig = foods.triggers.find((t) => t.name.trim().toLowerCase() === s.name.trim().toLowerCase());
   return (
-    <li className="flex items-center gap-3 rounded-2xl border border-line bg-card px-3 py-2.5">
+    <li className="flex items-start gap-3 rounded-2xl border border-line bg-card px-3 py-2.5">
       <div className="min-w-0 flex-1">
         <div className="text-sm font-medium leading-snug">{s.name}</div>
         <div className="tabular mt-0.5 text-xs text-muted">
@@ -251,6 +252,7 @@ function SuggestionCard({ s, done, onLog }: { s: Suggestion; done: boolean; onLo
           {`${s.kcal}\u00a0kcal · P\u00a0${s.protein} · C\u00a0${s.carbs} · F\u00a0${s.fat}`}
         </div>
         {trig && <TriggerWarning food={trig} compact />}
+        {s.recipe && <RecipeToggle recipe={s.recipe} />}
       </div>
       <button
         onClick={onLog}
