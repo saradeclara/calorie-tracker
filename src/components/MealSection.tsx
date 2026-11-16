@@ -1,6 +1,7 @@
 import { FoodEntry, Meal } from "@/lib/types";
 import type { FoodIndex } from "@/lib/foods";
 import { TriggerDot } from "./Reflux";
+import { sum } from "@/lib/nutrition";
 import { Icon, MacroLine } from "./ui";
 
 const SOURCE_ICON = { barcode: "barcode", ai: "sparkle", manual: "pencil" } as const;
@@ -20,13 +21,18 @@ export function MealSection({
   onAdd: () => void;
   onEdit: (e: FoodEntry) => void;
 }) {
-  const kcal = entries.reduce((a, e) => a + e.kcal, 0);
+  const total = sum(entries);
   return (
     <section aria-label={label} className="pt-3">
       <div className="flex items-center gap-2.5 px-1 pb-2">
         <Icon name={meal} weight="duotone" className="h-6 w-6 text-ink" />
-        <h3 className="font-display flex-1 text-xl font-semibold">{label}</h3>
-        {entries.length > 0 && <span className="tabular text-sm text-muted">{Math.round(kcal)} kcal</span>}
+        <div className="min-w-0 flex-1">
+          <h3 className="font-display text-xl font-semibold">{label}</h3>
+          {entries.length > 0 && (
+            <MacroLine n={total} className="text-xs text-muted" aria-label={`${label} totals`} />
+          )}
+        </div>
+        {entries.length > 0 && <span className="tabular text-sm text-muted">{Math.round(total.kcal)} kcal</span>}
         <button
           onClick={onAdd}
           className="grid h-8 w-8 place-items-center rounded-full bg-card text-ink active:scale-90"
