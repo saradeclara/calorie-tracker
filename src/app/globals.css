@@ -152,11 +152,17 @@ input[type="number"]::-webkit-outer-spin-button {
   margin: 0;
 }
 
+/* Safe-area insets; an Android fallback script in layout.tsx may override these. */
+:root {
+  --sat: env(safe-area-inset-top, 0px);
+  --sab: env(safe-area-inset-bottom, 0px);
+}
+
 .pt-safe {
-  padding-top: max(env(safe-area-inset-top), 0.75rem);
+  padding-top: max(var(--sat), 0.75rem);
 }
 .pb-safe {
-  padding-bottom: max(env(safe-area-inset-bottom), 0.75rem);
+  padding-bottom: max(var(--sab), 0.75rem);
 }
 
 .tabular {

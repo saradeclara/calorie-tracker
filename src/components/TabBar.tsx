@@ -15,7 +15,7 @@ const TABS: { id: Tab; label: string; icon: string }[] = [
 export function TabBar({ value, onChange }: { value: Tab; onChange: (t: Tab) => void }) {
   return (
     <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-bg/90 backdrop-blur-xl" aria-label="Sections">
-      <div className="mx-auto flex max-w-lg pb-[env(safe-area-inset-bottom)]">
+      <div className="mx-auto flex max-w-lg pb-[var(--sab)]">
         {TABS.map((t) => (
           <button
             key={t.id}
