@@ -393,9 +393,17 @@ export const MACRO_META = [
 ] as const;
 
 /** Compact macro readout: coloured letter + amount, no separators. */
-export function MacroLine({ n, className }: { n: { protein: number; carbs: number; fat: number; fibre: number }; className?: string }) {
+export function MacroLine({
+  n,
+  className,
+  "aria-label": ariaLabel,
+}: {
+  n: { protein: number; carbs: number; fat: number; fibre: number };
+  className?: string;
+  "aria-label"?: string;
+}) {
   return (
-    <span className={cx("tabular inline-flex gap-2.5", className)}>
+    <span className={cx("tabular inline-flex gap-2.5", className)} aria-label={ariaLabel} role={ariaLabel ? "group" : undefined}>
       {MACRO_META.map((m) => (
         <span key={m.key} className="whitespace-nowrap">
           <span className="font-semibold" style={{ color: m.color }}>
