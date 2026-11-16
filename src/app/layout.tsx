@@ -14,10 +14,10 @@ const bricolage = localFont({
 // Applies the chosen colour theme before first paint (no flash).
 const THEME_SCRIPT = `try{var t=localStorage.getItem("theme");if(t)document.documentElement.dataset.theme=t}catch(e){}`;
 
-// Android Chrome can draw the page under the system navigation bar when
-// viewport-fit=cover is set and report no bottom inset, hiding the tab bar.
-// iOS needs "cover" for the notch/home indicator, so only Android drops it.
-const ANDROID_VIEWPORT_SCRIPT = `try{if(/Android/i.test(navigator.userAgent)){var f=function(){var m=document.querySelector('meta[name="viewport"]');if(m)m.setAttribute("content",m.getAttribute("content").replace(/,?\\s*viewport-fit=cover/,""))};f();document.addEventListener("DOMContentLoaded",f)}}catch(e){}`;
+// Some Android versions draw the page edge-to-edge under the status and
+// navigation bars but report env(safe-area-inset-*) as 0, which hides the tab
+// bar. In that case fall back to typical system bar heights (3-button nav).
+const ANDROID_INSETS_SCRIPT = `try{if(/Android/i.test(navigator.userAgent)){document.addEventListener("DOMContentLoaded",function(){var p=document.createElement("div");p.style.cssText="position:fixed;visibility:hidden;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)";document.documentElement.appendChild(p);var c=getComputedStyle(p),t=parseFloat(c.paddingTop)||0,b=parseFloat(c.paddingBottom)||0;p.remove();if(window.innerHeight>=screen.height*0.97){var s=document.documentElement.style;if(t<1)s.setProperty("--sat","28px");if(b<1)s.setProperty("--sab","48px")}})}}catch(e){}`;
 
 export const metadata: Metadata = {
   title: "Calorie Tracker",
@@ -48,7 +48,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html lang="en-GB" className={`h-full antialiased ${bricolage.variable}`} suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
-        <script dangerouslySetInnerHTML={{ __html: ANDROID_VIEWPORT_SCRIPT }} />
+        <script dangerouslySetInnerHTML={{ __html: ANDROID_INSETS_SCRIPT }} />
       </head>
       <body className="min-h-full">
         {children}

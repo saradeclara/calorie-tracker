@@ -100,7 +100,7 @@ export function CoachView({ notify }: { notify: (m: string) => void }) {
   };
 
   return (
-    <div className="pb-[calc(9.5rem+env(safe-area-inset-bottom))]">
+    <div className="pb-[calc(9.5rem+var(--sab))]">
       <ScreenHeader
         title="Coach"
         action={
@@ -155,7 +155,7 @@ export function CoachView({ notify }: { notify: (m: string) => void }) {
 
       {/* Composer, above the tab bar */}
       <form
-        className="fixed inset-x-0 bottom-[calc(4rem+env(safe-area-inset-bottom))] z-30 border-t border-line bg-bg/95 backdrop-blur"
+        className="fixed inset-x-0 bottom-[calc(4rem+var(--sab))] z-30 border-t border-line bg-bg/95 backdrop-blur"
         onSubmit={(e) => {
           e.preventDefault();
           send(draft);

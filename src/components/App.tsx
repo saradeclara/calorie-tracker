@@ -157,7 +157,7 @@ export function App() {
             ))}
           </main>
 
-          <div className="pointer-events-none fixed inset-x-0 bottom-[calc(4rem+env(safe-area-inset-bottom))] z-30 mx-auto flex max-w-lg justify-end px-4">
+          <div className="pointer-events-none fixed inset-x-0 bottom-[calc(4rem+var(--sab))] z-30 mx-auto flex max-w-lg justify-end px-4">
             <button
               onClick={() => setAdding(date === todayKey() ? mealForNow() : "snack")}
               className="pointer-events-auto mb-3 grid h-16 w-16 place-items-center rounded-full bg-brand text-on-brand shadow-lg shadow-black/25 active:scale-95"
