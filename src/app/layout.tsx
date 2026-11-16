@@ -14,6 +14,11 @@ const bricolage = localFont({
 // Applies the chosen colour theme before first paint (no flash).
 const THEME_SCRIPT = `try{var t=localStorage.getItem("theme");if(t)document.documentElement.dataset.theme=t}catch(e){}`;
 
+// Android Chrome can draw the page under the system navigation bar when
+// viewport-fit=cover is set and report no bottom inset, hiding the tab bar.
+// iOS needs "cover" for the notch/home indicator, so only Android drops it.
+const ANDROID_VIEWPORT_SCRIPT = `try{if(/Android/i.test(navigator.userAgent)){var f=function(){var m=document.querySelector('meta[name="viewport"]');if(m)m.setAttribute("content",m.getAttribute("content").replace(/,?\\s*viewport-fit=cover/,""))};f();document.addEventListener("DOMContentLoaded",f)}}catch(e){}`;
+
 export const metadata: Metadata = {
   title: "Calorie Tracker",
   description: "Personal calorie, macro, fibre and water tracker",
@@ -43,6 +48,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html lang="en-GB" className={`h-full antialiased ${bricolage.variable}`} suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
+        <script dangerouslySetInnerHTML={{ __html: ANDROID_VIEWPORT_SCRIPT }} />
       </head>
       <body className="min-h-full">
         {children}
